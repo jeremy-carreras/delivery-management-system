@@ -1,15 +1,10 @@
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { PRODUCTS, BAKERY_FLAVORS, BREAD_TYPES, INITIAL_CATEGORIES, Category } from './constants';
+import { configureStore, createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import * as api from './api';
 
-export interface Order {
-  id: string;
-  items: CartItem[];
-  total: number;
-  date: string;
-  customerName: string;
-  customerPhone: string;
-  deliveryAddress: string;
-  status: 'Pending' | 'Active' | 'Completed' | 'Cancelled';
+export interface Category {
+  id?: string;
+  name: string;
+  type: 'Normal' | 'Custom';
 }
 
 export interface Product {
@@ -29,17 +24,95 @@ export interface CartItem extends Product {
   breadType?: string;
 }
 
+export interface Order {
+  id: string;
+  items: CartItem[];
+  total: number;
+  date: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  status: 'Pending' | 'Active' | 'Completed' | 'Cancelled';
+}
+
+// ── Async Thunks ─────────────────────────────────────────────────────────────
+
+export const fetchMenuData = createAsyncThunk('menu/fetchMenuData', async () => {
+  const [productsRes, categoriesRes, flavorsRes, breadsRes] = await Promise.all([
+    api.getProducts(),
+    api.getCategories(),
+    api.getBakeryFlavors(),
+    api.getBreadTypes(),
+  ]);
+  
+  return {
+    products: productsRes.data.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
+      image: p.image,
+      unit: p.unit,
+      category: p.category ? p.category.name : p.category_id,
+      isAvailable: p.isAvailable !== false,
+    })),
+    categories: categoriesRes.data.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type,
+    })),
+    bakeryFlavors: flavorsRes.data.map((f: any) => f.name),
+    breadTypes: breadsRes.data.map((b: any) => b.name),
+  };
+});
+
+// Since the string DB has no login endpoint out of the box, we fallback to fetch users
+export const loginUser = createAsyncThunk('auth/loginUser', async (credentials: { username: string; password?: string }) => {
+  const res = await api.getUsers();
+  const users = res.data;
+  const user = users.find((u: any) => u.username === credentials.username);
+  if (user) {
+    return { username: user.username, role: user.role, phone: user.phone || '' };
+  }
+  throw new Error('Invalid credentials');
+});
+
+export const fetchOrders = createAsyncThunk('orders/fetchOrders', async () => {
+  const res = await api.getOrders();
+  return res.data;
+});
+
+export const createOrderEntry = createAsyncThunk('orders/createOrderEntry', async (orderData: Partial<Order>) => {
+  const res = await api.createOrder({
+    total: orderData.total,
+    customer_name: orderData.customerName,
+    customer_phone: orderData.customerPhone,
+    delivery_address: orderData.deliveryAddress,
+    status: orderData.status,
+  });
+  return {
+    id: res.data.id,
+    items: orderData.items || [],
+    total: res.data.total,
+    date: res.data.created_at || new Date().toISOString(),
+    customerName: res.data.customer_name,
+    customerPhone: res.data.customer_phone,
+    deliveryAddress: res.data.delivery_address,
+    status: res.data.status,
+  } as Order;
+});
+
+// ── Cart slice ───────────────────────────────────────────────────────────────
 interface CartState {
   items: CartItem[];
 }
 
-const initialState: CartState = {
+const initialCartState: CartState = {
   items: [],
 };
 
 const cartSlice = createSlice({
   name: 'cart',
-  initialState,
+  initialState: initialCartState,
   reducers: {
     addToCart: (state, action: PayloadAction<Product & { flavors?: string[]; breadType?: string }>) => {
       const flavorStr = action.payload.flavors && action.payload.flavors.length > 0
@@ -78,24 +151,41 @@ export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlic
 // ── Orders slice ──────────────────────────────────────────────────────────────
 interface OrdersState {
   history: Order[];
+  loading: boolean;
 }
 
 const ordersInitialState: OrdersState = {
   history: [],
+  loading: false,
 };
 
 const ordersSlice = createSlice({
   name: 'orders',
   initialState: ordersInitialState,
-  reducers: {
-    addOrder: (state, action: PayloadAction<Order>) => {
-      // Add the new order at the beginning of the history
-      state.history.unshift(action.payload);
-    },
-  },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchOrders.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.history = action.payload.map((o: any) => ({
+          id: o.id,
+          date: o.created_at,
+          total: Number(o.total),
+          customerName: o.customer_name,
+          customerPhone: o.customer_phone,
+          deliveryAddress: o.delivery_address,
+          status: o.status,
+          items: [], 
+        }));
+      })
+      .addCase(createOrderEntry.fulfilled, (state, action) => {
+        state.history.unshift(action.payload);
+      });
+  }
 });
-
-export const { addOrder } = ordersSlice.actions;
 
 // ── Profile slice ─────────────────────────────────────────────────────────────
 export interface ProfileState {
@@ -130,13 +220,15 @@ interface MenuState {
   bakeryFlavors: string[];
   breadTypes: string[];
   categories: Category[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
 
 const menuInitialState: MenuState = {
-  products: PRODUCTS,
-  bakeryFlavors: BAKERY_FLAVORS,
-  breadTypes: BREAD_TYPES,
-  categories: INITIAL_CATEGORIES,
+  products: [],
+  bakeryFlavors: [],
+  breadTypes: [],
+  categories: [],
+  status: 'idle',
 };
 
 const menuSlice = createSlice({
@@ -194,6 +286,22 @@ const menuSlice = createSlice({
       if (cat) cat.type = action.payload.type;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchMenuData.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchMenuData.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.products = action.payload.products;
+        state.categories = action.payload.categories;
+        state.bakeryFlavors = action.payload.bakeryFlavors;
+        state.breadTypes = action.payload.breadTypes;
+      })
+      .addCase(fetchMenuData.rejected, (state) => {
+        state.status = 'failed';
+      });
+  }
 });
 
 export const { addProduct, updateProduct, deleteProduct, addFlavor, deleteFlavor, addBreadType, deleteBreadType, addCategory, deleteCategory, renameCategory, updateCategoryType } = menuSlice.actions;
@@ -210,40 +318,40 @@ interface AuthUser {
 interface AuthState {
   isAuthenticated: boolean;
   currentUser: AuthUser | null;
+  error: string | null;
 }
-
-const MOCK_USERS: (AuthUser & { password: string })[] = [
-  { username: 'admin', password: 'admin', role: 'admin', phone: '' },
-  { username: 'user1', password: 'user1', role: 'user', phone: '1234567890' },
-  { username: 'user2', password: 'user2', role: 'user', phone: '0987654321' },
-];
 
 const authInitialState: AuthState = {
   isAuthenticated: false,
   currentUser: null,
+  error: null,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: authInitialState,
   reducers: {
-    login: (state, action: PayloadAction<{ username: string; password: string }>) => {
-      const found = MOCK_USERS.find(
-        u => u.username === action.payload.username && u.password === action.payload.password
-      );
-      if (found) {
-        state.isAuthenticated = true;
-        state.currentUser = { username: found.username, role: found.role, phone: found.phone };
-      }
-    },
     logout: (state) => {
       state.isAuthenticated = false;
       state.currentUser = null;
     },
   },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.currentUser = action.payload as any;
+        state.error = null;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.currentUser = null;
+        state.error = action.error.message || 'Login failed';
+      });
+  }
 });
 
-export const { login, logout } = authSlice.actions;
+export const { logout } = authSlice.actions;
 
 export const store = configureStore({
   reducer: {

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, login } from '../store';
+import { RootState, loginUser, AppDispatch } from '../store';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
 export const Login: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const auth = useSelector((state: RootState) => state.auth);
   const [username, setUsername] = useState('');
@@ -24,12 +24,15 @@ export const Login: React.FC = () => {
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      dispatch(login({ username, password }));
-      // The useEffect above will handle redirection if login is successful
-      setLoading(false);
-      setError('Invalid username or password');
-    }, 600);
+    dispatch(loginUser({ username, password }))
+      .unwrap()
+      .then(() => {
+        setLoading(false);
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.message || 'Invalid username or password');
+      });
   };
 
   return (

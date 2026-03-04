@@ -6,7 +6,7 @@
 import React from 'react';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { store, RootState, UserRole } from './store';
+import { store, RootState, UserRole, AppDispatch } from './store';
 import { Home } from './components/Home';
 import { Cart } from './components/Cart';
 import { Checkout } from './components/Checkout';
@@ -18,12 +18,21 @@ import { Login } from './components/Login';
 import { motion, AnimatePresence } from 'motion/react';
 
 const AppContent: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useSelector((state: RootState) => state.auth);
   const userRole = auth.currentUser?.role || 'user';
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  React.useEffect(() => {
+    // We import these thunks from store to fetch data immediately
+    import('./store').then(({ fetchMenuData, fetchOrders }) => {
+      dispatch(fetchMenuData());
+      dispatch(fetchOrders());
+    });
+  }, [dispatch]);
 
   const isHome = location.pathname === '/';
   const isOrders = location.pathname === '/orders';

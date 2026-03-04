@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, addToCart, setProfile } from '../store';
+import { addToCart, RootState, setProfile } from '../store';
 import { Button } from 'primereact/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { AddressInput } from './AddressInput';
