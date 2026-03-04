@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, clearCart, addOrder, Order } from '../store';
+import { RootState, clearCart, createOrderEntry, Order, AppDispatch } from '../store';
 import { Button } from 'primereact/button';
 
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ interface CheckoutProps {}
 
 export const Checkout: React.FC<CheckoutProps> = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const profile = useSelector((state: RootState) => state.profile);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -32,9 +32,10 @@ export const Checkout: React.FC<CheckoutProps> = () => {
       status: 'Active',
     };
 
-    dispatch(addOrder(newOrder));
-    dispatch(clearCart());
-    navigate('/orders');
+    dispatch(createOrderEntry(newOrder)).then(() => {
+      dispatch(clearCart());
+      navigate('/orders');
+    });
   };
 
   return (
