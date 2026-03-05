@@ -4,6 +4,7 @@ import { addToCart, RootState, setProfile } from '../store';
 import { Button } from 'primereact/button';
 import { motion, AnimatePresence } from 'motion/react';
 import { AddressInput } from './AddressInput';
+import { ProfileModal } from './ProfileModal';
 import { useNavigate } from 'react-router-dom';
 
 interface HomeProps {}
@@ -15,23 +16,18 @@ export const Home: React.FC<HomeProps> = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showProfileModal, setShowProfileModal] = React.useState(false);
   const profile = useSelector((state: RootState) => state.profile);
-  const [draftName, setDraftName] = React.useState(profile.name);
-  const [draftPhone, setDraftPhone] = React.useState(profile.phone);
-  const [draftAddress, setDraftAddress] = React.useState(profile.address);
-  const [isAddressSelected, setIsAddressSelected] = React.useState(!!profile.address);
-  
+  const auth = useSelector((state: RootState) => state.auth);
+  const isAdmin = auth.isAuthenticated && auth.currentUser?.role === 'admin';
+  const isPhoneSet = profile.phone.trim() !== '';
+  const isProfileComplete = isPhoneSet && profile.name.trim() !== '' && profile.address.trim() !== '';
+  // Show welcome modal whenever profile is not complete AND user is not admin
+  const [showWelcome, setShowWelcome] = React.useState(!isProfileComplete && !isAdmin);
+  const [showProfileForCart, setShowProfileForCart] = React.useState(false);
+
   const [selectedBakeryProduct, setSelectedBakeryProduct] = React.useState<any | null>(null);
   const [selectedFlavors, setSelectedFlavors] = React.useState<string[]>([]);
   const [selectedBreadType, setSelectedBreadType] = React.useState<string | null>(null);
   const { products, bakeryFlavors, breadTypes, categories: menuCategories } = useSelector((state: RootState) => state.menu);
-
-  // Update drafts if profile changes
-  React.useEffect(() => {
-    setDraftName(profile.name);
-    setDraftPhone(profile.phone);
-    setDraftAddress(profile.address);
-    setIsAddressSelected(!!profile.address);
-  }, [profile]);
 
   const categoryNames = ['All', ...menuCategories.map(c => c.name)];
 
@@ -44,7 +40,7 @@ export const Home: React.FC<HomeProps> = () => {
 
   const handleAddToCart = (product: any) => {
     if (!profile.name.trim() || !profile.address.trim()) {
-      setShowProfileModal(true);
+      setShowProfileForCart(true);
       return;
     }
     const cat = menuCategories.find(c => c.name === product.category);
@@ -57,91 +53,70 @@ export const Home: React.FC<HomeProps> = () => {
     dispatch(addToCart(product));
   };
 
-  const handleSaveProfile = () => {
-    if (!draftName.trim() || !draftPhone.trim() || !isAddressSelected) return;
-    dispatch(setProfile({ name: draftName.trim(), phone: draftPhone.trim(), address: draftAddress.trim() }));
-    setShowProfileModal(false);
-  };
-
   return (
     <div className="px-4 py-6">
-      {/* Profile Modal */}
+      {/* Welcome Modal */}
       <AnimatePresence>
-        {showProfileModal && (
+        {showWelcome && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col gap-4"
+              className="bg-white rounded-3xl w-full max-w-[320px] p-8 shadow-2xl flex flex-col items-center gap-6"
             >
-              <h2 className="text-xl font-bold">Complete your profile</h2>
-              <p className="text-sm text-slate-500">Fill in your details to continue</p>
-              
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
-                  <input
-                    type="text"
-                    value={draftName}
-                    onChange={(e) => setDraftName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
-                    placeholder="e.g. John Doe"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">phone</span>
-                  <input
-                    type="text"
-                    value={draftPhone}
-                    onChange={(e) => setDraftPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
-                    placeholder="e.g. 555-1234"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Delivery Address</label>
-                <AddressInput
-                  value={draftAddress}
-                  onChange={(val) => {
-                    setDraftAddress(val);
-                    setIsAddressSelected(false);
-                  }}
-                  onSelect={() => setIsAddressSelected(true)}
-                  placeholder="e.g. 123 Main St"
-                  bgClass="bg-slate-50"
-                />
+              <div className="size-20 bg-primary/20 rounded-full flex items-center justify-center text-primary mb-2 shadow-inner">
+                <span className="material-symbols-outlined text-4xl">storefront</span>
               </div>
               
-              <div className="flex gap-2 mt-2">
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">¡Hola!</h2>
+                <p className="text-slate-500 font-medium">¿Qué te gustaría hacer hoy?</p>
+              </div>
+              
+              <div className="flex flex-col gap-3 w-full mt-2">
                 <button 
-                  onClick={() => setShowProfileModal(false)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-bold text-sm transition-colors"
+                  onClick={() => {
+                    setShowWelcome(false);
+                  }}
+                  className="w-full py-4 bg-primary text-slate-900 rounded-2xl font-bold text-base hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
                 >
-                  Cancel
+                  <span className="material-symbols-outlined group-hover:scale-110 transition-transform">restaurant_menu</span>
+                  Ver menú
                 </button>
-                <button
-                  onClick={handleSaveProfile}
-                  disabled={!draftName.trim() || !draftPhone.trim() || !isAddressSelected}
-                  className="flex-1 py-3 bg-primary text-background-dark hover:bg-primary/90 rounded-xl font-bold text-sm disabled:opacity-50 transition-colors"
+                <button 
+                  onClick={() => {
+                    navigate('/orders');
+                  }}
+                  className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-200 transition-all flex items-center justify-center gap-2 group border border-slate-200"
                 >
-                  Save
+                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">receipt_long</span>
+                  Ver mis pedidos
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowWelcome(false);
+                    // Do nothing else for now
+                    console.log('Registrarse clicked');
+                  }}
+                  className="w-full py-4 bg-white text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
+                >
+                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">person_add</span>
+                  Registrarse
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Cart profile modal — triggered when adding to cart without full profile */}
+      <ProfileModal isOpen={showProfileForCart} onClose={() => setShowProfileForCart(false)} />
 
       {/* Bakery Flavor Modal */}
       <AnimatePresence>

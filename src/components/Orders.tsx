@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { useNavigate } from 'react-router-dom';
+import { ProfileModal } from './ProfileModal';
 
 interface OrdersProps {}
 
@@ -11,11 +12,33 @@ export const Orders: React.FC<OrdersProps> = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const profile = useSelector((state: RootState) => state.profile);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('Active');
+  const [searchPhone, setSearchPhone] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+
+  const isPhoneSet = profile.phone.trim() !== '';
+  const isProfileComplete = isPhoneSet && profile.name.trim() !== '' && profile.address.trim() !== '';
 
   const isAdmin = auth.isAuthenticated && auth.currentUser?.role === 'admin';
-  const filteredHistory = isAdmin
+  let filteredHistory = isAdmin
     ? history
     : history.filter(o => o.customerPhone === profile.phone);
+
+  const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+  
+  filteredHistory = filteredHistory.filter(o => {
+    // Parse the date string saved in checkout, e.g. "Oct 24, 2023, 10:30 AM"
+    const orderTime = new Date(o.date).getTime();
+    return orderTime >= twentyFourHoursAgo;
+  });
+
+  if (activeTab !== 'All Orders') {
+    filteredHistory = filteredHistory.filter(o => o.status.toLowerCase() === activeTab.toLowerCase());
+  }
+
+  if (searchPhone.trim()) {
+    filteredHistory = filteredHistory.filter(o => o.customerPhone && o.customerPhone.includes(searchPhone.trim()));
+  }
 
   const toggleOrder = (id: string) => {
     setExpandedOrderId(prev => prev === id ? null : id);
@@ -23,6 +46,12 @@ export const Orders: React.FC<OrdersProps> = () => {
   
   return (
     <div className="flex flex-col min-h-screen bg-background-light">
+      <ProfileModal 
+        isOpen={!isPhoneSet && !isAdmin} 
+        phoneOnly={true}
+        requireClose={true} 
+      />
+      
       <header className="sticky top-0 z-10 bg-background-light/80 backdrop-blur-md border-b border-primary/10">
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-4">
@@ -32,7 +61,10 @@ export const Orders: React.FC<OrdersProps> = () => {
             <h2 className="text-xl font-bold tracking-tight">Order History</h2>
           </div>
           <div className="flex items-center gap-2">
-            <button className="size-10 flex items-center justify-center rounded-full bg-primary/10">
+            <button 
+              onClick={() => setShowSearch(!showSearch)}
+              className={`size-10 flex items-center justify-center rounded-full ${showSearch ? 'bg-primary text-slate-900' : 'bg-primary/10'}`}
+            >
               <span className="material-symbols-outlined">search</span>
             </button>
             <button className="size-10 flex items-center justify-center rounded-full bg-primary/10">
@@ -40,13 +72,27 @@ export const Orders: React.FC<OrdersProps> = () => {
             </button>
           </div>
         </div>
+        
+        {showSearch && (
+          <div className="px-4 pb-2 animate-in fade-in slide-in-from-top-2">
+            <input 
+              type="text" 
+              placeholder="Search by phone number..." 
+              value={searchPhone}
+              onChange={(e) => setSearchPhone(e.target.value)}
+              className="w-full bg-slate-100 border-none rounded-xl py-2 px-4 shadow-inner text-sm focus:ring-2 focus:ring-primary outline-none"
+            />
+          </div>
+        )}
+
         <div className="px-4">
           <div className="flex gap-8 overflow-x-auto no-scrollbar">
-            {['All Orders', 'Active', 'Completed', 'Cancelled'].map((tab, i) => (
+            {['All Orders', 'Active', 'Completed', 'Cancelled'].map((tab) => (
               <button 
                 key={tab} 
+                onClick={() => setActiveTab(tab)}
                 className={`flex flex-col items-center justify-center border-b-2 pb-3 pt-2 whitespace-nowrap text-sm font-bold ${
-                  i === 0 ? 'border-primary text-slate-900' : 'border-transparent text-slate-500'
+                  activeTab === tab ? 'border-primary text-slate-900' : 'border-transparent text-slate-500'
                 }`}
               >
                 {tab}
@@ -76,11 +122,10 @@ export const Orders: React.FC<OrdersProps> = () => {
 
             return (
               <div key={order.id} className="bg-white rounded-xl border border-primary/10 overflow-hidden shadow-sm transition-all duration-300">
-                <div className="p-4 flex flex-col md:flex-row gap-4">
-                  <div 
-                    className="h-24 w-full md:w-32 bg-slate-100 rounded-lg bg-cover bg-center shrink-0 border border-slate-200" 
-                    style={{ backgroundImage: `url('${order.items[0]?.image || ''}')` }}
-                  ></div>
+              <div className="p-4 flex gap-4">
+                  <div className="size-14 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                    <span className="material-symbols-outlined text-slate-400 text-2xl">receipt_long</span>
+                  </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex justify-between items-start">
                       <div>

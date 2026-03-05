@@ -20,7 +20,10 @@ export const Checkout: React.FC<CheckoutProps> = () => {
   const shortAddress = addressParts[0] || 'Unknown';
   const restAddress = addressParts.slice(1).join(',').trim() || '';
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const handleConfirmOrder = () => {
+    setIsSubmitting(true);
     const newOrder: Order = {
       id: Math.floor(100000 + Math.random() * 900000).toString(),
       items: [...cartItems],
@@ -33,8 +36,12 @@ export const Checkout: React.FC<CheckoutProps> = () => {
     };
 
     dispatch(createOrderEntry(newOrder)).then(() => {
+      setIsSubmitting(false);
       dispatch(clearCart());
       navigate('/orders');
+    }).catch(() => {
+      setIsSubmitting(false);
+      // Handle error natively if desired
     });
   };
 
@@ -145,10 +152,16 @@ export const Checkout: React.FC<CheckoutProps> = () => {
       <footer className="p-6 bg-white border-t border-slate-100 flex flex-col items-center gap-4">
         <Button 
           onClick={handleConfirmOrder}
-          disabled={cartItems.length === 0}
+          disabled={cartItems.length === 0 || isSubmitting}
           className="w-full bg-primary hover:bg-primary/90 text-background-dark py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 border-none disabled:opacity-50"
         >
-          Confirm Order • ${total.toFixed(2)} <span className="material-symbols-outlined">arrow_forward</span>
+          {isSubmitting ? (
+            <span className="w-6 h-6 border-2 border-background-dark border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              Confirm Order • ${total.toFixed(2)} <span className="material-symbols-outlined">arrow_forward</span>
+            </>
+          )}
         </Button>
         <p className="text-[10px] text-slate-400 text-center uppercase tracking-widest">
           By placing your order you agree to our terms of service

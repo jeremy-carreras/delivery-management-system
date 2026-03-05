@@ -15,6 +15,8 @@ import { OrderDetails } from './components/OrderDetails';
 import { MenuAdmin } from './components/MenuAdmin';
 import { Profile } from './components/Profile';
 import { Login } from './components/Login';
+import { Register } from './components/Register';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import { motion, AnimatePresence } from 'motion/react';
 
 const AppContent: React.FC = () => {
@@ -25,6 +27,9 @@ const AppContent: React.FC = () => {
   const userRole = auth.currentUser?.role || 'user';
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const menuStatus = useSelector((state: RootState) => state.menu.status);
+  const ordersLoading = useSelector((state: RootState) => state.orders.loading);
 
   React.useEffect(() => {
     // We import these thunks from store to fetch data immediately
@@ -42,6 +47,10 @@ const AppContent: React.FC = () => {
   const isCheckout = location.pathname === '/checkout';
 
   const showNav = isHome || isOrders || isProfile || isMenuAdmin;
+
+  if (menuStatus === 'loading' || ordersLoading) {
+    return <LoadingSpinner fullScreen />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto min-h-screen flex flex-col relative bg-background-light overflow-x-hidden">
@@ -84,6 +93,7 @@ const AppContent: React.FC = () => {
               <Route path="/menu" element={userRole === 'admin' ? <MenuAdmin /> : <Navigate to="/" />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </motion.div>
