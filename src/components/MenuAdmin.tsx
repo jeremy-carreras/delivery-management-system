@@ -31,6 +31,8 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   const [newCategoryType, setNewCategoryType] = useState<'Normal' | 'Custom'>('Normal');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveProduct = async () => {
     setFormError(null);
@@ -47,6 +49,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
       return;
     }
     
+    setIsSaving(true);
     const imageUrl = draftProduct.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
     const cat = categories.find(c => c.name === draftProduct.category);
     const category_id = cat?.id || '';
@@ -79,6 +82,8 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
       setIsFormExpanded(false);
     } catch (err: any) {
       setFormError(err.message || 'Failed to save product');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -94,21 +99,27 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
 
   const handleDeleteProduct = async (id: string) => {
     try {
+      setIsSaving(true);
       await api.deleteProduct(id);
       dispatch(fetchMenuData());
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleAddFlavor = async () => {
     if (newFlavor.trim() && !bakeryFlavors.includes(newFlavor.trim())) {
       try {
+        setIsSaving(true);
         await api.createBakeryFlavor({ name: newFlavor.trim() });
         dispatch(fetchMenuData());
         setNewFlavor('');
       } catch (err) {
         console.error(err);
+      } finally {
+        setIsSaving(false);
       }
     }
   };
@@ -128,21 +139,27 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   const handleAddBreadType = async () => {
     if (newBreadType.trim() && !breadTypes.includes(newBreadType.trim())) {
       try {
+        setIsSaving(true);
         await api.createBreadType({ name: newBreadType.trim() });
         dispatch(fetchMenuData());
         setNewBreadType('');
-      } catch (err) { }
+      } catch (err) { } finally {
+        setIsSaving(false);
+      }
     }
   };
 
   const handleAddCategory = async () => {
     if (newCategory.trim() && !categories.find(c => c.name === newCategory.trim())) {
       try {
+        setIsSaving(true);
         await api.createCategory({ id: Math.random().toString(36).substr(2, 9), name: newCategory.trim(), type: newCategoryType });
         dispatch(fetchMenuData());
         setNewCategory('');
         setNewCategoryType('Normal');
-      } catch (err) {}
+      } catch (err) {} finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -287,9 +304,14 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                         )}
                         <button 
                           onClick={handleSaveProduct}
-                          className="flex-1 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm"
+                          disabled={isSaving}
+                          className="flex-1 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm flex justify-center items-center disabled:opacity-50"
                         >
-                          {editingId ? 'Save Changes' : 'Add Product'}
+                          {isSaving ? (
+                            <span className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
+                          ) : (
+                            editingId ? 'Save Changes' : 'Add Product'
+                          )}
                         </button>
                       </div>
                     </div>

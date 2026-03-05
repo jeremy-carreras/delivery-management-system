@@ -37,6 +37,8 @@ export const updateOrder = (id: string | number, data: any) => fetchAPI(`/orders
 export const deleteOrder = (id: string | number) => fetchAPI(`/orders/${id}`, { method: 'DELETE' });
 
 // ── Users ────────────────────────────────────────────────────────────────────
+export const login = (data: any) => fetchAPI('/login', { method: 'POST', body: JSON.stringify(data) });
+export const register = (data: any) => fetchAPI('/register', { method: 'POST', body: JSON.stringify(data) });
 export const getUsers = () => fetchAPI('/users');
 export const getUser = (id: string | number) => fetchAPI(`/users/${id}`);
 export const createUser = (data: any) => fetchAPI('/users', { method: 'POST', body: JSON.stringify(data) });

@@ -2,15 +2,21 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, loginUser, AppDispatch } from '../store';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 export const Login: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const auth = useSelector((state: RootState) => state.auth);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Get any success message passed via route state
+  const stateMessage = (location.state as any)?.message;
+  // Initialize error based on whether there's a success message to display instead
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(stateMessage || '');
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
@@ -119,7 +125,14 @@ export const Login: React.FC = () => {
         </form>
 
         <p className="text-center text-slate-500 text-xs mt-6">
-          Demo: <span className="text-slate-400">admin/admin</span>, <span className="text-slate-400">user1/user1</span> or <span className="text-slate-400">user2/user2</span>
+          Demo: <span className="text-slate-400">admin/admin</span>
+        </p>
+
+        <p className="text-center text-slate-500 text-sm mt-4">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-primary hover:underline font-semibold">
+            Create an account
+          </Link>
         </p>
       </motion.div>
     </div>

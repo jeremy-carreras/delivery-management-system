@@ -65,15 +65,14 @@ export const fetchMenuData = createAsyncThunk('menu/fetchMenuData', async () => 
   };
 });
 
-// Since the string DB has no login endpoint out of the box, we fallback to fetch users
 export const loginUser = createAsyncThunk('auth/loginUser', async (credentials: { username: string; password?: string }) => {
-  const res = await api.getUsers();
-  const users = res.data;
-  const user = users.find((u: any) => u.username === credentials.username);
-  if (user) {
-    return { username: user.username, role: user.role, phone: user.phone || '' };
-  }
-  throw new Error('Invalid credentials');
+  const res = await api.login({ username: credentials.username, password: credentials.password });
+  return res.user;
+});
+
+export const registerUser = createAsyncThunk('auth/registerUser', async (userData: any) => {
+  const res = await api.register(userData);
+  return res.data;
 });
 
 export const fetchOrders = createAsyncThunk('orders/fetchOrders', async () => {
@@ -88,6 +87,7 @@ export const createOrderEntry = createAsyncThunk('orders/createOrderEntry', asyn
     customer_phone: orderData.customerPhone,
     delivery_address: orderData.deliveryAddress,
     status: orderData.status,
+    items: orderData.items,
   });
   return {
     id: res.data.id,
@@ -178,7 +178,18 @@ const ordersSlice = createSlice({
           customerPhone: o.customer_phone,
           deliveryAddress: o.delivery_address,
           status: o.status,
-          items: [], 
+          items: (o.items || []).map((item: any) => ({
+            id: item.id,
+            cartItemId: item.id,
+            name: item.product_name,
+            price: Number(item.price_at_time),
+            quantity: item.quantity,
+            image: item.image || '',
+            unit: '',
+            category: '',
+            breadType: item.bread_type || undefined,
+            flavors: item.flavors ? (typeof item.flavors === 'string' ? JSON.parse(item.flavors) : item.flavors) : undefined,
+          })),
         }));
       })
       .addCase(createOrderEntry.fulfilled, (state, action) => {
