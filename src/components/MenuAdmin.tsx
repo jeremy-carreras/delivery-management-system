@@ -13,7 +13,13 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<'products' | 'flavors' | 'breadTypes' | 'categories'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'flavors' | 'breadTypes' | 'categories'>(
+    () => (sessionStorage.getItem('menuAdminTab') as any) || 'products'
+  );
+  const handleSetActiveTab = (tab: 'products' | 'flavors' | 'breadTypes' | 'categories') => {
+    sessionStorage.setItem('menuAdminTab', tab);
+    setActiveTab(tab);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormExpanded, setIsFormExpanded] = useState(false);
   
@@ -22,7 +28,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [draftProduct, setDraftProduct] = useState<Partial<Product>>({
-    name: '', price: 0, unit: '', category: 'Groceries', image: '', isAvailable: true
+    name: '', price: 0, unit: '', category: categories[0]?.name || '', image: '', isAvailable: true
   });
 
   const [newFlavor, setNewFlavor] = useState('');
@@ -31,6 +37,10 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   const [newCategoryType, setNewCategoryType] = useState<'Normal' | 'Custom'>('Normal');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [editingFlavor, setEditingFlavor] = useState<string | null>(null); // id
+  const [editingFlavorName, setEditingFlavorName] = useState('');
+  const [editingBreadType, setEditingBreadType] = useState<string | null>(null); // id
+  const [editingBreadTypeName, setEditingBreadTypeName] = useState('');
   
   const [isSaving, setIsSaving] = useState(false);
 
@@ -53,6 +63,12 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
     const imageUrl = draftProduct.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800';
     const cat = categories.find(c => c.name === draftProduct.category);
     const category_id = cat?.id || '';
+
+    if (!category_id) {
+      setFormError('Selecciona una categoría válida antes de guardar.');
+      setIsSaving(false);
+      return;
+    }
 
     try {
       if (editingId) {
@@ -78,7 +94,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
       }
       dispatch(fetchMenuData());
       setEditingId(null);
-      setDraftProduct({ name: '', price: 0, unit: '', category: 'Groceries', image: '', isAvailable: true });
+      setDraftProduct({ name: '', price: 0, unit: '', category: categories[0]?.name || '', image: '', isAvailable: true });
       setIsFormExpanded(false);
     } catch (err: any) {
       setFormError(err.message || 'Failed to save product');
@@ -110,9 +126,9 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   };
 
   const handleAddFlavor = async () => {
-    if (newFlavor.trim() && !bakeryFlavors.includes(newFlavor.trim())) {
+    if (newFlavor.trim() && !bakeryFlavors.find(f => f.name === newFlavor.trim())) {
+      setIsSaving(true);
       try {
-        setIsSaving(true);
         await api.createBakeryFlavor({ name: newFlavor.trim() });
         dispatch(fetchMenuData());
         setNewFlavor('');
@@ -124,36 +140,65 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
     }
   };
 
-  const handleDeleteFlavor = async (name: string) => {
+  const handleUpdateFlavor = async (id: string, newName: string) => {
+    setIsSaving(true);
     try {
-      // Backend expects flavor ID. Let's assume we can fetch data again or use name?
-      // Wait, there's no easy map from flavor name to flavor id in Redux state yet because we mapped it to strings.
-      // We will skip actual deletion for flavors if the id is missing.
-      // Just console log for now or pass name if supported by modified backend
-      console.warn("Flavor delete not fully mapped from state, need ID");
+      await api.updateBakeryFlavor(id, { name: newName.trim() });
+      dispatch(fetchMenuData());
+    } catch (err) { console.error(err); }
+    finally { setIsSaving(false); }
+    setEditingFlavor(null);
+  };
+
+  const handleDeleteFlavor = async (id: string) => {
+    setIsSaving(true);
+    try {
+      await api.deleteBakeryFlavor(id);
+      dispatch(fetchMenuData());
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleAddBreadType = async () => {
-    if (newBreadType.trim() && !breadTypes.includes(newBreadType.trim())) {
+    if (newBreadType.trim() && !breadTypes.find(b => b.name === newBreadType.trim())) {
+      setIsSaving(true);
       try {
-        setIsSaving(true);
         await api.createBreadType({ name: newBreadType.trim() });
         dispatch(fetchMenuData());
         setNewBreadType('');
-      } catch (err) { } finally {
+      } catch (err) {} finally {
         setIsSaving(false);
       }
     }
+  };
+
+  const handleUpdateBreadType = async (id: string, newName: string) => {
+    setIsSaving(true);
+    try {
+      await api.updateBreadType(id, { name: newName.trim() });
+      dispatch(fetchMenuData());
+    } catch (err) { console.error(err); }
+    finally { setIsSaving(false); }
+    setEditingBreadType(null);
+  };
+
+  const handleDeleteBreadType = async (id: string) => {
+    setIsSaving(true);
+    try {
+      await api.deleteBreadType(id);
+      dispatch(fetchMenuData());
+    } catch (err) { console.error(err); }
+    finally { setIsSaving(false); }
   };
 
   const handleAddCategory = async () => {
     if (newCategory.trim() && !categories.find(c => c.name === newCategory.trim())) {
       try {
         setIsSaving(true);
-        await api.createCategory({ id: Math.random().toString(36).substr(2, 9), name: newCategory.trim(), type: newCategoryType });
+        await api.createCategory({ name: newCategory.trim(), type: newCategoryType });
         dispatch(fetchMenuData());
         setNewCategory('');
         setNewCategoryType('Normal');
@@ -176,28 +221,28 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
         </div>
         <div className="flex border-t border-slate-100 items-center overflow-x-auto no-scrollbar">
           <button 
-            onClick={() => setActiveTab('products')}
+            onClick={() => handleSetActiveTab('products')}
             className={`flex-1 py-3 px-4 text-sm font-bold border-b-2 whitespace-nowrap ${activeTab === 'products' ? 'border-primary text-primary' : 'border-transparent text-slate-500'}`}
           >
             Products
           </button>
           <button 
-            onClick={() => setActiveTab('categories')}
+            onClick={() => handleSetActiveTab('categories')}
             className={`flex-1 py-3 px-4 text-sm font-bold border-b-2 whitespace-nowrap ${activeTab === 'categories' ? 'border-primary text-primary' : 'border-transparent text-slate-500'}`}
           >
             Categories
           </button>
           <button 
-            onClick={() => setActiveTab('flavors')}
+            onClick={() => handleSetActiveTab('flavors')}
             className={`flex-1 py-3 px-4 text-sm font-bold border-b-2 whitespace-nowrap ${activeTab === 'flavors' ? 'border-primary text-primary' : 'border-transparent text-slate-500'}`}
           >
-            Bakery Flavors
+            Sabor de escarchado
           </button>
           <button 
-            onClick={() => setActiveTab('breadTypes')}
+            onClick={() => handleSetActiveTab('breadTypes')}
             className={`flex-1 py-3 px-4 text-sm font-bold border-b-2 whitespace-nowrap ${activeTab === 'breadTypes' ? 'border-primary text-primary' : 'border-transparent text-slate-500'}`}
           >
-            Bread Types
+            Cervezas
           </button>
         </div>
       </header>
@@ -286,7 +331,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                           onChange={e => setDraftProduct({...draftProduct, isAvailable: e.target.checked})}
                           className="w-5 h-5 accent-primary rounded cursor-pointer"
                         />
-                        <span className="text-sm font-semibold text-slate-700">Available to customers</span>
+                        <span className="text-sm font-semibold text-slate-700">Disponible para clientes</span>
                       </label>
                       <div className="flex gap-2">
                         {editingId && (
@@ -295,7 +340,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                               setEditingId(null); 
                               setFormError(null);
                               setIsFormExpanded(false);
-                              setDraftProduct({ name: '', price: 0, unit: '', category: 'Groceries', image: '', isAvailable: true }); 
+                              setDraftProduct({ name: '', price: 0, unit: '', category: categories[0]?.name || '', image: '', isAvailable: true }); 
                             }}
                             className="flex-1 py-2 bg-slate-100 text-slate-600 rounded-lg font-bold text-sm"
                           >
@@ -308,7 +353,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                           className="flex-1 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm flex justify-center items-center disabled:opacity-50"
                         >
                           {isSaving ? (
-                            <span className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
+                            <span className="block w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
                           ) : (
                             editingId ? 'Save Changes' : 'Add Product'
                           )}
@@ -366,32 +411,71 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
         {activeTab === 'flavors' && (
           <div className="space-y-6">
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-4">
-              <h3 className="font-bold text-lg">Add Bakery Flavor</h3>
+              <h3 className="font-bold text-lg">Agregar Sabor de Escarchado</h3>
               <div className="flex gap-2">
                 <input 
-                  placeholder="e.g. Matcha" 
+                  placeholder="ej. Matcha" 
                   value={newFlavor} 
                   onChange={e => setNewFlavor(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddFlavor()}
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm"
                 />
                 <button 
                   onClick={handleAddFlavor}
-                  className="px-4 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm"
+                  disabled={isSaving || !newFlavor.trim()}
+                  className="px-4 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm disabled:opacity-50"
                 >
-                  Add
+                  {isSaving ? <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin inline-block" /> : 'Agregar'}
                 </button>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h3 className="font-bold text-lg">Active Flavors</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <h3 className="font-bold text-lg">Sabores activos</h3>
+              <div className="grid grid-cols-1 gap-2">
                 {bakeryFlavors.map(f => (
-                  <div key={f} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <span className="font-medium text-sm">{f}</span>
-                    <button onClick={() => handleDeleteFlavor(f)} className="text-red-400 hover:text-red-500 p-1">
-                      <span className="material-symbols-outlined text-[16px]">close</span>
-                    </button>
+                  <div key={f.id} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                    {editingFlavor === f.id ? (
+                      <>
+                        <input
+                          value={editingFlavorName}
+                          onChange={e => setEditingFlavorName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleUpdateFlavor(f.id, editingFlavorName)}
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-3 text-sm"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleUpdateFlavor(f.id, editingFlavorName)}
+                          disabled={isSaving}
+                          className="p-1.5 bg-green-500 rounded-lg text-white hover:bg-green-600 disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-sm">check</span>
+                        </button>
+                        <button
+                          onClick={() => setEditingFlavor(null)}
+                          className="p-1.5 bg-slate-200 rounded-lg text-slate-700 hover:bg-slate-300"
+                        >
+                          <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex-1 font-medium text-sm">{f.name}</span>
+                        <button
+                          onClick={() => { setEditingFlavor(f.id); setEditingFlavorName(f.name); }}
+                          className="p-1.5 bg-slate-200 rounded-lg hover:bg-slate-300 text-slate-900"
+                        >
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFlavor(f.id)}
+                          disabled={isSaving}
+                          className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -401,32 +485,71 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
         {activeTab === 'breadTypes' && (
           <div className="space-y-6">
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-4">
-              <h3 className="font-bold text-lg">Add Bread Type</h3>
+              <h3 className="font-bold text-lg">Agregar Cerveza</h3>
               <div className="flex gap-2">
                 <input 
-                  placeholder="e.g. Multigrain" 
+                  placeholder="ej. IPA, Lager" 
                   value={newBreadType} 
                   onChange={e => setNewBreadType(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddBreadType()}
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm"
                 />
                 <button 
                   onClick={handleAddBreadType}
-                  className="px-4 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm"
+                  disabled={isSaving || !newBreadType.trim()}
+                  className="px-4 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm disabled:opacity-50"
                 >
-                  Add
+                  {isSaving ? <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin inline-block" /> : 'Agregar'}
                 </button>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h3 className="font-bold text-lg">Active Bread Types</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <h3 className="font-bold text-lg">Cervezas activas</h3>
+              <div className="grid grid-cols-1 gap-2">
                 {breadTypes.map(b => (
-                  <div key={b} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                    <span className="font-medium text-sm">{b}</span>
-                    <button onClick={() => console.warn('Not Mapped in State for Delete')} className="text-red-400 hover:text-red-500 p-1">
-                      <span className="material-symbols-outlined text-[16px]">close</span>
-                    </button>
+                  <div key={b.id} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                    {editingBreadType === b.id ? (
+                      <>
+                        <input
+                          value={editingBreadTypeName}
+                          onChange={e => setEditingBreadTypeName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleUpdateBreadType(b.id, editingBreadTypeName)}
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-3 text-sm"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleUpdateBreadType(b.id, editingBreadTypeName)}
+                          disabled={isSaving}
+                          className="p-1.5 bg-green-500 rounded-lg text-white hover:bg-green-600 disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-sm">check</span>
+                        </button>
+                        <button
+                          onClick={() => setEditingBreadType(null)}
+                          className="p-1.5 bg-slate-200 rounded-lg text-slate-700 hover:bg-slate-300"
+                        >
+                          <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="flex-1 font-medium text-sm">{b.name}</span>
+                        <button
+                          onClick={() => { setEditingBreadType(b.id); setEditingBreadTypeName(b.name); }}
+                          className="p-1.5 bg-slate-200 rounded-lg hover:bg-slate-300 text-slate-900"
+                        >
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBreadType(b.id)}
+                          disabled={isSaving}
+                          className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

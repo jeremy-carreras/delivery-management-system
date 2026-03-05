@@ -53,15 +53,15 @@ export const fetchMenuData = createAsyncThunk('menu/fetchMenuData', async () => 
       image: p.image,
       unit: p.unit,
       category: p.category ? p.category.name : p.category_id,
-      isAvailable: p.isAvailable !== false,
+      isAvailable: p.is_available !== false,
     })),
     categories: categoriesRes.data.map((c: any) => ({
       id: c.id,
       name: c.name,
       type: c.type,
     })),
-    bakeryFlavors: flavorsRes.data.map((f: any) => f.name),
-    breadTypes: breadsRes.data.map((b: any) => b.name),
+    bakeryFlavors: flavorsRes.data.map((f: any) => ({ id: f.id, name: f.name })),
+    breadTypes: breadsRes.data.map((b: any) => ({ id: b.id, name: b.name })),
   };
 });
 
@@ -228,8 +228,8 @@ export const { setProfile } = profileSlice.actions;
 // ── Menu slice ───────────────────────────────────────────────────────────────
 interface MenuState {
   products: Product[];
-  bakeryFlavors: string[];
-  breadTypes: string[];
+  bakeryFlavors: { id: string; name: string }[];
+  breadTypes: { id: string; name: string }[];
   categories: Category[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
@@ -258,21 +258,21 @@ const menuSlice = createSlice({
     deleteProduct: (state, action: PayloadAction<string>) => {
       state.products = state.products.filter(p => p.id !== action.payload);
     },
-    addFlavor: (state, action: PayloadAction<string>) => {
-      if (!state.bakeryFlavors.includes(action.payload)) {
+    addFlavor: (state, action: PayloadAction<{ id: string; name: string }>) => {
+      if (!state.bakeryFlavors.find(f => f.id === action.payload.id)) {
         state.bakeryFlavors.push(action.payload);
       }
     },
     deleteFlavor: (state, action: PayloadAction<string>) => {
-      state.bakeryFlavors = state.bakeryFlavors.filter(f => f !== action.payload);
+      state.bakeryFlavors = state.bakeryFlavors.filter(f => f.id !== action.payload);
     },
-    addBreadType: (state, action: PayloadAction<string>) => {
-      if (!state.breadTypes.includes(action.payload)) {
+    addBreadType: (state, action: PayloadAction<{ id: string; name: string }>) => {
+      if (!state.breadTypes.find(b => b.id === action.payload.id)) {
         state.breadTypes.push(action.payload);
       }
     },
     deleteBreadType: (state, action: PayloadAction<string>) => {
-      state.breadTypes = state.breadTypes.filter(b => b !== action.payload);
+      state.breadTypes = state.breadTypes.filter(b => b.id !== action.payload);
     },
     addCategory: (state, action: PayloadAction<Category>) => {
       if (!state.categories.find(c => c.name === action.payload.name)) {

@@ -8,14 +8,8 @@ interface LoadingSpinnerProps {
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ fullScreen = false }) => {
   const content = (
     <div className="flex flex-col items-center justify-center gap-4">
-      <div className="bg-primary p-4 rounded-2xl shadow-lg shadow-primary/30 shrink-0 relative w-16 h-16 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 rounded-2xl border-4 border-background-dark/20 border-t-background-dark"
-        ></motion.div>
-      </div>
-      <h2 className="text-xl font-bold tracking-tight text-slate-800 animate-pulse">Loading...</h2>
+      <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-primary animate-spin" />
+      <h2 className="text-base font-semibold text-slate-500 tracking-wide">Cargando...</h2>
     </div>
   );
 

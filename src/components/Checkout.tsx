@@ -156,7 +156,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
           className="w-full bg-primary hover:bg-primary/90 text-background-dark py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 border-none disabled:opacity-50"
         >
           {isSubmitting ? (
-            <span className="w-6 h-6 border-2 border-background-dark border-t-transparent rounded-full animate-spin" />
+            <span className="block w-6 h-6 border-2 border-background-dark border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
               Confirm Order • ${total.toFixed(2)} <span className="material-symbols-outlined">arrow_forward</span>
