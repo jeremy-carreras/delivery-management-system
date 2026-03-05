@@ -136,21 +136,21 @@ export const Home: React.FC<HomeProps> = () => {
               <h2 className="text-xl font-bold leading-tight">Customize your {selectedBakeryProduct.name.toLowerCase()}</h2>
               
               <div>
-                <p className="text-sm font-bold text-slate-700 mt-2">1. Pick bread type</p>
+                <p className="text-sm font-bold text-slate-700 mt-2">1. Elige la cerveza</p>
                 <div className="space-y-2 mt-2">
                   {breadTypes.map(bType => {
-                    const isSelected = selectedBreadType === bType;
+                    const isSelected = selectedBreadType === bType.name;
                     return (
                       <button
-                        key={bType}
-                        onClick={() => setSelectedBreadType(bType)}
+                        key={bType.id}
+                        onClick={() => setSelectedBreadType(bType.name)}
                         className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors ${
                           isSelected 
                             ? 'border-primary bg-primary/10 text-slate-900' 
                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         }`}
                       >
-                        <span className="font-semibold text-sm">{bType}</span>
+                        <span className="font-semibold text-sm">{bType.name}</span>
                         {isSelected && <span className="material-symbols-outlined text-primary text-xl">radio_button_checked</span>}
                         {!isSelected && <span className="material-symbols-outlined text-slate-300 text-xl">radio_button_unchecked</span>}
                       </button>
@@ -160,20 +160,20 @@ export const Home: React.FC<HomeProps> = () => {
               </div>
 
               <div>
-                <p className="text-sm font-bold text-slate-700">2. Pick flavors (Required, max 2)</p>
+                <p className="text-sm font-bold text-slate-700">2. Sabor de escarchado (Requerido, máx 2)</p>
                 <div className="space-y-2 mt-2">
                   {bakeryFlavors.map(flavor => {
-                    const isSelected = selectedFlavors.includes(flavor);
+                    const isSelected = selectedFlavors.includes(flavor.name);
                     const canSelect = isSelected || selectedFlavors.length < 2;
                     
                     return (
                       <button
-                        key={flavor}
+                        key={flavor.id}
                         onClick={() => {
                           if (isSelected) {
-                            setSelectedFlavors(prev => prev.filter(f => f !== flavor));
+                            setSelectedFlavors(prev => prev.filter(f => f !== flavor.name));
                           } else if (canSelect) {
-                            setSelectedFlavors(prev => [...prev, flavor]);
+                            setSelectedFlavors(prev => [...prev, flavor.name]);
                           }
                         }}
                         disabled={!canSelect && !isSelected}
@@ -183,7 +183,7 @@ export const Home: React.FC<HomeProps> = () => {
                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed border-slate-100' : 'transition-colors'}`}
                       >
-                        <span className="font-semibold text-sm">{flavor}</span>
+                        <span className="font-semibold text-sm">{flavor.name}</span>
                         {isSelected && <span className="material-symbols-outlined text-primary text-xl">check_circle</span>}
                       </button>
                     );

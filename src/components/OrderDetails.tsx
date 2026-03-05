@@ -224,7 +224,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                   }`}
                 >
                   {isSaving ? (
-                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : 'Confirmar'}
                 </button>
               </div>

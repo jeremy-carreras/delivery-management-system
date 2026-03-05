@@ -115,7 +115,7 @@ export const AddressInput: React.FC<AddressInputProps> = ({ value, onChange, onS
         rows={2}
         className={`${bgClass} border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm resize-none relative z-0 ${className || 'w-full'}`}
       />
-      {isSearching && <span className="absolute right-3 top-4 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin z-10" />}
+      {isSearching && <span className="absolute right-3 top-4 block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin z-10" />}
       
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-slate-100 z-50 overflow-hidden max-h-48 overflow-y-auto w-full">
