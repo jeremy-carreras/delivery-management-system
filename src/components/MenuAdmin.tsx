@@ -579,7 +579,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                   onClick={handleAddCategory}
                   className="px-4 py-2 bg-primary text-slate-900 rounded-lg font-bold text-sm"
                 >
-                  Add
+                  Añadir
                 </button>
               </div>
               <p className="text-xs text-slate-400">Custom categories allow customers to choose bread type and flavor.</p>

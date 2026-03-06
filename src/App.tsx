@@ -29,13 +29,11 @@ const AppContent: React.FC = () => {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const menuStatus = useSelector((state: RootState) => state.menu.status);
-  const ordersLoading = useSelector((state: RootState) => state.orders.loading);
 
   React.useEffect(() => {
     // We import these thunks from store to fetch data immediately
-    import('./store').then(({ fetchMenuData, fetchOrders }) => {
+    import('./store').then(({ fetchMenuData }) => {
       dispatch(fetchMenuData());
-      dispatch(fetchOrders());
     });
   }, [dispatch]);
 
@@ -48,7 +46,7 @@ const AppContent: React.FC = () => {
 
   const showNav = isHome || isOrders || isProfile || isMenuAdmin;
 
-  if (menuStatus === 'loading' || ordersLoading) {
+  if (menuStatus === 'loading') {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -58,7 +56,7 @@ const AppContent: React.FC = () => {
         <header className="sticky top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-primary/10 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-primary p-1.5 rounded-lg">
+              <div className="bg-primary pt-1 pb-0 px-1 rounded-lg">
                 <span className="material-symbols-outlined text-background-dark text-2xl font-bold">bolt</span>
               </div>
               <h1 className="text-xl font-bold tracking-tight">FlashDrop</h1>

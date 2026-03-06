@@ -32,7 +32,8 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   deliveryAddress: string;
-  status: 'Pending' | 'Active' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Accepted' | 'Preparando' | 'En reparto' | 'Entregado' | 'Cancelled';
+  cancellationReason?: string;
 }
 
 // ── Async Thunks ─────────────────────────────────────────────────────────────
@@ -75,8 +76,8 @@ export const registerUser = createAsyncThunk('auth/registerUser', async (userDat
   return res.data;
 });
 
-export const fetchOrders = createAsyncThunk('orders/fetchOrders', async () => {
-  const res = await api.getOrders();
+export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (phone?: string) => {
+  const res = await api.getOrders(phone);
   return res.data;
 });
 
@@ -178,6 +179,7 @@ const ordersSlice = createSlice({
           customerPhone: o.customer_phone,
           deliveryAddress: o.delivery_address,
           status: o.status,
+          cancellationReason: o.cancellation_reason || undefined,
           items: (o.items || []).map((item: any) => ({
             id: item.id,
             cartItemId: item.id,
