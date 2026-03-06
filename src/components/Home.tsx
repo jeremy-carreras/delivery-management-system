@@ -12,6 +12,8 @@ interface HomeProps {}
 export const Home: React.FC<HomeProps> = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [activeCategory, setActiveCategory] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showProfileModal, setShowProfileModal] = React.useState(false);
@@ -38,6 +40,12 @@ export const Home: React.FC<HomeProps> = () => {
     return matchesCategory && matchesSearch;
   });
 
+  const showToast = React.useCallback((msg: string) => {
+    setToastMessage(msg);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastMessage(null), 2500);
+  }, []);
+
   const handleAddToCart = (product: any) => {
     if (!profile.name.trim() || !profile.address.trim()) {
       setShowProfileForCart(true);
@@ -51,10 +59,37 @@ export const Home: React.FC<HomeProps> = () => {
       return;
     }
     dispatch(addToCart(product));
+    showToast(`${product.name} fue añadido`);
   };
+
+  React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (showWelcome && e.key === 'Escape') {
+        setShowWelcome(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showWelcome]);
 
   return (
     <div className="px-4 py-6">
+      {/* Custom Subtle Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[300] bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-xl text-xs font-medium flex items-center gap-2 max-w-[90%] whitespace-nowrap overflow-hidden"
+          >
+            <span className="material-symbols-outlined text-[16px] text-green-400">check_circle</span>
+            <span className="truncate">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Welcome Modal */}
       <AnimatePresence>
         {showWelcome && (
@@ -63,6 +98,9 @@ export const Home: React.FC<HomeProps> = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowWelcome(false);
+            }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -101,8 +139,6 @@ export const Home: React.FC<HomeProps> = () => {
                 <button 
                   onClick={() => {
                     setShowWelcome(false);
-                    // Do nothing else for now
-                    console.log('Registrarse clicked');
                   }}
                   className="w-full py-4 bg-white text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
                 >
@@ -196,7 +232,7 @@ export const Home: React.FC<HomeProps> = () => {
                   onClick={() => setSelectedBakeryProduct(null)}
                   className="flex-1 py-3 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-bold text-sm transition-colors"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   disabled={!selectedBreadType || selectedFlavors.length === 0}
@@ -206,11 +242,12 @@ export const Home: React.FC<HomeProps> = () => {
                       flavors: selectedFlavors.length > 0 ? selectedFlavors : undefined,
                       breadType: selectedBreadType!
                     }));
+                    showToast(`${selectedBakeryProduct.name} personalizado añadido`);
                     setSelectedBakeryProduct(null);
                   }}
                   className="flex-1 py-3 bg-primary text-background-dark hover:bg-primary/90 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add to Cart
+                  Agregar al carrito
                 </button>
               </div>
             </motion.div>
@@ -270,7 +307,7 @@ export const Home: React.FC<HomeProps> = () => {
                   onClick={() => handleAddToCart(product)}
                   className="w-full bg-primary/10 hover:bg-primary text-background-dark py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 border-none shadow-none"
                 >
-                  <span className="material-symbols-outlined text-sm">add</span> Add
+                  <span className="material-symbols-outlined text-sm">add</span> Agregar
                 </Button>
               </div>
             </div>

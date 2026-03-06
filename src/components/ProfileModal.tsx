@@ -4,6 +4,8 @@ import { RootState, setProfile } from '../store';
 import { motion, AnimatePresence } from 'motion/react';
 import { AddressInput } from './AddressInput';
 
+import { useNavigate } from 'react-router-dom';
+
 interface ProfileModalProps {
   isOpen: boolean;
   onClose?: () => void;
@@ -13,6 +15,7 @@ interface ProfileModalProps {
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, requireClose = false, phoneOnly = false }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const profile = useSelector((state: RootState) => state.profile);
   
   const [draftName, setDraftName] = React.useState(profile.name);
@@ -26,6 +29,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, req
     setDraftAddress(profile.address);
     setIsAddressSelected(!!profile.address);
   }, [profile, isOpen]);
+
+  const handleDismiss = React.useCallback(() => {
+    if (onClose && !requireClose) {
+      onClose();
+    } else {
+      // If forced to enter phone/profile but they escape -> go home
+      navigate('/');
+    }
+  }, [onClose, requireClose, navigate]);
+
+  React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (isOpen && e.key === 'Escape') {
+        handleDismiss();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, handleDismiss]);
 
   const handleSaveProfile = () => {
     if (phoneOnly) {
@@ -47,6 +69,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, req
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleDismiss();
+          }}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }}

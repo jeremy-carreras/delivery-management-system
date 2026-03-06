@@ -32,7 +32,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
       customerName: profile.name,
       customerPhone: profile.phone,
       deliveryAddress: profile.address,
-      status: 'Active',
+      status: 'Pending',
     };
 
     dispatch(createOrderEntry(newOrder)).then(() => {

@@ -1,18 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch, fetchOrders } from '../store';
 import { useNavigate } from 'react-router-dom';
 import { ProfileModal } from './ProfileModal';
+import { StatusTracker } from './StatusTracker';
 
 interface OrdersProps {}
 
 export const Orders: React.FC<OrdersProps> = () => {
   const navigate = useNavigate();
-  const { history } = useSelector((state: RootState) => state.orders);
+  const dispatch = useDispatch<AppDispatch>();
+  const { history, loading } = useSelector((state: RootState) => state.orders);
   const auth = useSelector((state: RootState) => state.auth);
   const profile = useSelector((state: RootState) => state.profile);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('Active');
+  const [activeTab, setActiveTab] = useState('All Orders');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -41,6 +43,13 @@ export const Orders: React.FC<OrdersProps> = () => {
   const isProfileComplete = isPhoneSet && profile.name.trim() !== '' && profile.address.trim() !== '';
 
   const isAdmin = auth.isAuthenticated && auth.currentUser?.role === 'admin';
+
+  React.useEffect(() => {
+    if (isAdmin || isPhoneSet) {
+      dispatch(fetchOrders(isAdmin ? undefined : profile.phone));
+    }
+  }, [dispatch, isAdmin, isPhoneSet, profile.phone]);
+
   let filteredHistory = isAdmin
     ? history
     : history.filter(o => o.customerPhone === profile.phone);
@@ -52,7 +61,11 @@ export const Orders: React.FC<OrdersProps> = () => {
     return orderTime >= from && orderTime <= to;
   });
 
-  if (activeTab !== 'All Orders') {
+  if (activeTab === 'En proceso') {
+    filteredHistory = filteredHistory.filter(o =>
+      ['Accepted', 'Preparando', 'En reparto'].includes(o.status)
+    );
+  } else if (activeTab !== 'All Orders') {
     filteredHistory = filteredHistory.filter(o => o.status.toLowerCase() === activeTab.toLowerCase());
   }
 
@@ -91,6 +104,13 @@ export const Orders: React.FC<OrdersProps> = () => {
             <h2 className="text-xl font-bold tracking-tight">Order History</h2>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => dispatch(fetchOrders(isAdmin ? undefined : profile.phone))}
+              disabled={loading}
+              className={`size-10 flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors ${loading ? 'opacity-50' : ''}`}
+            >
+              <span className={`material-symbols-outlined text-primary ${loading ? 'animate-spin' : ''}`}>refresh</span>
+            </button>
             <button 
               onClick={() => setShowSearch(!showSearch)}
               className={`size-10 flex items-center justify-center rounded-full ${showSearch ? 'bg-primary text-slate-900' : 'bg-primary/10'}`}
@@ -172,7 +192,7 @@ export const Orders: React.FC<OrdersProps> = () => {
 
         <div className="px-4">
           <div className="flex gap-8 overflow-x-auto no-scrollbar">
-            {['All Orders', 'Active', 'Completed', 'Cancelled'].map((tab) => (
+            {['All Orders', 'Pending', 'En proceso', 'Entregado', 'Cancelled'].map((tab) => (
               <button 
                 key={tab} 
                 onClick={() => setActiveTab(tab)}
@@ -212,12 +232,23 @@ export const Orders: React.FC<OrdersProps> = () => {
             const isExpanded = expandedOrderId === order.id;
 
             const statusColors: Record<string, string> = {
-              Active: 'bg-blue-50 text-blue-600',
-              Completed: 'bg-green-50 text-green-600',
-              Cancelled: 'bg-red-50 text-red-500',
-              Pending: 'bg-yellow-50 text-yellow-600',
+              Pending:      'bg-yellow-50 text-yellow-600',
+              Accepted:     'bg-blue-50 text-blue-600',
+              Preparando:   'bg-orange-50 text-orange-500',
+              'En reparto': 'bg-purple-50 text-purple-600',
+              Entregado:    'bg-green-50 text-green-600',
+              Cancelled:    'bg-red-50 text-red-500',
+            };
+            const statusLabels: Record<string, string> = {
+              Pending:      'Pendiente',
+              Accepted:     'Aceptado',
+              Preparando:   'En preparación',
+              'En reparto': 'En reparto',
+              Entregado:    'Entregado',
+              Cancelled:    'Cancelado',
             };
             const statusColor = statusColors[order.status] || 'bg-slate-100 text-slate-600';
+            const statusLabel = statusLabels[order.status] || order.status;
 
             return (
               <div key={order.id} className="bg-white rounded-xl border border-primary/10 overflow-hidden shadow-sm">
@@ -240,15 +271,23 @@ export const Orders: React.FC<OrdersProps> = () => {
                     {/* Row 2: Customer name + status badge */}
                     <div className="flex items-center justify-between mt-0.5">
                       <h4 className="text-base font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
-                      <span className={`ml-2 shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${statusColor}`}>{order.status}</span>
+                      <span className={`ml-2 shrink-0 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
                     </div>
-                    {/* Row 3: Phone */}
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="mt-1 material-symbols-outlined text-slate-400 text-[14px]">phone</span>
-                      <p className="text-xs text-slate-500 font-medium">{order.customerPhone || '—'}</p>
+                    {/* Row 3: Tracker animation (only if not cancelled) */}
+                    {order.status !== 'Cancelled' && (
+                      <div className="mt-3 mb-1">
+                        <StatusTracker status={order.status as any} variant="compact" />
+                      </div>
+                    )}
+                    {/* Row 4: Phone */}
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-slate-400 text-[14px]">phone</span>
+                        <p className="text-xs text-slate-500 font-medium">{order.customerPhone || '—'}</p>
+                      </div>
                     </div>
-                    {/* Row 4: Address truncated */}
-                    <div className="flex items-start gap-1 mt-0.5">
+                    {/* Row 5: Address truncated */}
+                    <div className="flex items-start gap-1 mt-1">
                       <span className="material-symbols-outlined text-slate-400 text-[14px] mt-0.5">location_on</span>
                       <p className=" mt-2 text-xs text-slate-500 leading-snug line-clamp-1">{order.deliveryAddress || '—'}</p>
                     </div>
@@ -306,13 +345,6 @@ export const Orders: React.FC<OrdersProps> = () => {
             );
           })
         )}
-
-        <div className="flex justify-center py-4">
-          <button className="flex items-center gap-2 text-primary font-bold hover:underline">
-            <span>Load Older Orders</span>
-            <span className="material-symbols-outlined">expand_more</span>
-          </button>
-        </div>
       </main>
     </div>
   );
