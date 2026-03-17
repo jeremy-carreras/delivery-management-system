@@ -43,14 +43,28 @@ export const Orders: React.FC<OrdersProps> = () => {
   const isProfileComplete = isPhoneSet && profile.name.trim() !== '' && profile.address.trim() !== '';
 
   const isAdmin = auth.isAuthenticated && auth.currentUser?.role === 'admin';
+  const isStaff = auth.isAuthenticated && ['admin', 'repartidor', 'preparador'].includes(auth.currentUser?.role || '');
+
+  const POLLING_INTERVAL = Number(import.meta.env.VITE_POLLING_INTERVAL) || 30000;
 
   React.useEffect(() => {
-    if (isAdmin || isPhoneSet) {
-      dispatch(fetchOrders(isAdmin ? undefined : profile.phone));
-    }
-  }, [dispatch, isAdmin, isPhoneSet, profile.phone]);
+    const triggerFetch = () => {
+      if (isStaff || isPhoneSet) {
+        dispatch(fetchOrders({
+          phone: isAdmin || auth.currentUser?.role === 'repartidor' ? undefined : profile.phone,
+          userId: auth.currentUser?.id,
+          userRole: auth.currentUser?.role,
+        }));
+      }
+    };
 
-  let filteredHistory = isAdmin
+    triggerFetch();
+
+    const intervalId = setInterval(triggerFetch, POLLING_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [dispatch, isStaff, isAdmin, isPhoneSet, profile.phone, auth.currentUser, POLLING_INTERVAL]);
+
+  let filteredHistory = (isAdmin || auth.currentUser?.role === 'repartidor')
     ? history
     : history.filter(o => o.customerPhone === profile.phone);
 
@@ -93,7 +107,7 @@ export const Orders: React.FC<OrdersProps> = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background-light">
       <ProfileModal 
-        isOpen={!isPhoneSet && !isAdmin} 
+        isOpen={!isPhoneSet && !isStaff} 
         phoneOnly={true}
         requireClose={true} 
       />
@@ -105,7 +119,11 @@ export const Orders: React.FC<OrdersProps> = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => dispatch(fetchOrders(isAdmin ? undefined : profile.phone))}
+              onClick={() => dispatch(fetchOrders({
+                phone: isAdmin || auth.currentUser?.role === 'repartidor' ? undefined : profile.phone,
+                userId: auth.currentUser?.id,
+                userRole: auth.currentUser?.role,
+              }))}
               disabled={loading}
               className={`size-10 flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors ${loading ? 'opacity-50' : ''}`}
             >
@@ -219,7 +237,13 @@ export const Orders: React.FC<OrdersProps> = () => {
           </button>
         </div>
 
-        {filteredHistory.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <span className="material-symbols-outlined text-4xl text-primary animate-spin mb-3">refresh</span>
+            <h3 className="font-bold text-lg text-slate-700">Cargando pedidos...</h3>
+            <p className="text-slate-500 text-sm mt-1">Conectando con el servidor</p>
+          </div>
+        ) : filteredHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center bg-white rounded-xl border border-primary/10 shadow-sm mt-4">
             <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
               <span className="material-symbols-outlined text-4xl text-slate-300">receipt_long</span>
@@ -235,7 +259,7 @@ export const Orders: React.FC<OrdersProps> = () => {
               Pending:      'bg-yellow-50 text-yellow-600',
               Accepted:     'bg-blue-50 text-blue-600',
               Preparando:   'bg-orange-50 text-orange-500',
-              'En reparto': 'bg-purple-50 text-purple-600',
+              'En reparto': 'bg-purple-600 text-slate-900',
               Entregado:    'bg-green-50 text-green-600',
               Cancelled:    'bg-red-50 text-red-500',
             };
@@ -270,8 +294,17 @@ export const Orders: React.FC<OrdersProps> = () => {
                     </div>
                     {/* Row 2: Customer name + status badge */}
                     <div className="flex items-center justify-between mt-0.5">
-                      <h4 className="text-base font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
-                      <span className={`ml-2 shrink-0 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
+                      <div className="flex flex-col min-w-0 pr-4">
+                        <h4 className="text-base font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
+                        {/* Only show the driver badge if the user is an admin or preparador and there is an assigned driver */}
+                        {(isAdmin || auth.currentUser?.role === 'preparador') && order.repartidor && (
+                          <div className="flex items-center gap-1 mt-1 text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full w-max">
+                            <span className="material-symbols-outlined text-[12px]">two_wheeler</span>
+                            <span className="truncate max-w-[100px]">{order.repartidor.name}</span>
+                          </div>
+                        )}
+                      </div>
+                      <span className={`ml-2 shrink-0 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor} self-start mt-1`}>{statusLabel}</span>
                     </div>
                     {/* Row 3: Tracker animation (only if not cancelled) */}
                     {order.status !== 'Cancelled' && (

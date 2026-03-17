@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, UserRole, AppDispatch } from '../store';
 import { useNavigate } from 'react-router-dom';
-import { updateOrder } from '../api';
+import { updateOrder, getUsers } from '../api';
 import { fetchOrders } from '../store';
 import { StatusTracker } from './StatusTracker';
 
@@ -19,7 +19,7 @@ const STATUS_CONFIG: Record<OrderStatus, { icon: string; bg: string; text: strin
   Pending:      { icon: 'hourglass_top',    bg: 'bg-yellow-50',  text: 'text-yellow-600', label: 'Pendiente' },
   Accepted:     { icon: 'thumb_up',         bg: 'bg-blue-50',    text: 'text-blue-600',   label: 'Aceptado' },
   Preparando:   { icon: 'soup_kitchen',     bg: 'bg-orange-50',  text: 'text-orange-500', label: 'En preparación' },
-  'En reparto': { icon: 'electric_moped',   bg: 'bg-purple-50',  text: 'text-purple-600', label: 'En reparto' },
+  'En reparto': { icon: 'electric_moped',   bg: 'bg-purple-600', text: 'text-slate-900', label: 'En reparto' },
   Entregado:    { icon: 'check_circle',     bg: 'bg-green-50',   text: 'text-green-600',  label: 'Entregado' },
   Cancelled:    { icon: 'cancel',           bg: 'bg-red-50',     text: 'text-red-500',    label: 'Cancelado' },
 };
@@ -43,11 +43,39 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
   const dispatch = useDispatch<AppDispatch>();
   const { history, loading } = useSelector((state: RootState) => state.orders);
   const profile = useSelector((state: RootState) => state.profile);
+  const auth = useSelector((state: RootState) => state.auth);
   const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<string>('');
+  const [drivers, setDrivers] = useState<any[]>([]);
   const [customReason, setCustomReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const order = history.find(o => o.id === orderId);
+
+  React.useEffect(() => {
+    // Solo cargamos repartidores si es admin o preparador
+    if (userRole === 'admin' || userRole === 'preparador') {
+      getUsers().then(res => {
+        const reps = res.data.filter((u: any) => u.role === 'repartidor');
+        setDrivers(reps);
+      }).catch(console.error);
+    }
+  }, [userRole]);
+
+  const POLLING_INTERVAL = Number(import.meta.env.VITE_POLLING_INTERVAL) || 30000;
+
+  React.useEffect(() => {
+    const triggerFetch = () => {
+      dispatch(fetchOrders({ 
+        phone: userRole === 'admin' ? undefined : profile.phone, 
+        userId: auth.currentUser?.id, 
+        userRole: auth.currentUser?.role 
+      }));
+    };
+
+    const intervalId = setInterval(triggerFetch, POLLING_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [dispatch, userRole, profile.phone, auth.currentUser, POLLING_INTERVAL]);
 
   if (!order) {
     return (
@@ -90,11 +118,18 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
       const payload: Record<string, string> = { status: pendingStatus };
       if (pendingStatus === 'Cancelled' && finalReason) {
         payload.cancellation_reason = finalReason;
+      } else if (pendingStatus === 'En reparto' && selectedDriver) {
+        payload.assigned_to = selectedDriver;
       }
       await updateOrder(order.id, payload);
-      await dispatch(fetchOrders(userRole === 'admin' ? undefined : profile.phone));
+      await dispatch(fetchOrders({
+        phone: userRole === 'admin' ? undefined : profile.phone,
+        userId: auth.currentUser?.id,
+        userRole: auth.currentUser?.role,
+      }));
       setPendingStatus(null);
       setSelectedReason(null);
+      setSelectedDriver('');
       setCustomReason('');
     } catch (err) {
       console.error('Error updating order status:', err);
@@ -107,6 +142,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
     if (!isSaving) {
       setPendingStatus(null);
       setSelectedReason(null);
+      setSelectedDriver('');
       setCustomReason('');
     }
   };
@@ -125,7 +161,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
             </div>
           </div>
           <button
-            onClick={() => dispatch(fetchOrders(userRole === 'admin' ? undefined : profile.phone))}
+            onClick={() => dispatch(fetchOrders({ phone: userRole === 'admin' ? undefined : profile.phone, userId: auth.currentUser?.id, userRole: auth.currentUser?.role }))}
             disabled={loading}
             className={`size-10 flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors ${loading ? 'opacity-50' : ''}`}
           >
@@ -146,6 +182,20 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
               <p className="text-sm text-slate-500">Pedido en FlashDrop</p>
             </div>
           </div>
+
+          {/* Assigned Driver Badge */}
+          {order.repartidor && (
+            <div className="mt-3 bg-indigo-50/50 rounded-xl p-3 border border-indigo-100 flex items-center gap-3">
+              <div className="size-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined">two_wheeler</span>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-indigo-400 font-semibold mb-0.5">Repartidor asignado</p>
+                <p className="text-sm font-bold text-slate-800 leading-tight">{order.repartidor.name}</p>
+                <p className="text-xs text-indigo-500/80 font-medium">{order.repartidor.phone}</p>
+              </div>
+            </div>
+          )}
 
           {/* Progress bar — only for non-cancelled */}
           {currentStatus !== 'Cancelled' && (
@@ -256,8 +306,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
         </section>
       </main>
 
-      {/* Admin Action Bar */}
-      {userRole === 'admin' && !isTerminal && (
+      {/* Action Bar (Admin or Repartidor when status is En reparto) */}
+      {((userRole === 'admin') || (userRole === 'repartidor' && currentStatus === 'En reparto')) && !isTerminal && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100 max-w-2xl mx-auto">
           <div className="flex gap-3">
             {/* Next step button */}
@@ -270,14 +320,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                 {NEXT_STEP_LABEL[currentStatus] || 'Siguiente'}
               </button>
             )}
-            {/* Cancel button — always visible */}
-            <button
-              onClick={() => setPendingStatus('Cancelled')}
-              className={`py-3 px-4 rounded-xl font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 border border-red-100 ${nextStatus ? 'w-auto' : 'flex-1'}`}
-            >
-              <span className="material-symbols-outlined text-[20px]">cancel</span>
-              Cancelar
-            </button>
+            {/* Cancel button — only for admin or specific conditions if needed */}
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setPendingStatus('Cancelled')}
+                className={`py-3 px-4 rounded-xl font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 border border-red-100 ${nextStatus ? 'w-auto' : 'flex-1'}`}
+              >
+                <span className="material-symbols-outlined text-[20px]">cancel</span>
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -376,6 +428,27 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                   <p className="text-slate-500 mt-2 text-sm">
                     El pedido pasará a <span className="font-bold">{STATUS_CONFIG[pendingStatus].label}</span>
                   </p>
+                  
+                  {pendingStatus === 'En reparto' && (
+                    <div className="mt-4 w-full text-left">
+                      <label className="text-sm font-bold text-slate-700 mb-2 block">
+                        Asignar Repartidor <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={selectedDriver}
+                        onChange={e => setSelectedDriver(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary appearance-none"
+                      >
+                        <option value="" disabled>-- Selecciona un repartidor --</option>
+                        {drivers.map(d => (
+                          <option key={d.id} value={d.id}>{d.name} ({d.username})</option>
+                        ))}
+                      </select>
+                      {!selectedDriver && (
+                        <p className="text-xs text-red-400 mt-2">Debes asignar un repartidor para continuar</p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3 w-full mt-4">
                   <button
@@ -387,7 +460,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                   </button>
                   <button
                     onClick={handleConfirmStatus}
-                    disabled={isSaving}
+                    disabled={isSaving || (pendingStatus === 'En reparto' && !selectedDriver)}
                     className={`flex-1 py-3 px-4 rounded-xl font-bold text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${STATUS_CONFIG[pendingStatus].text.replace('text-', 'bg-').replace('-600', '-600').replace('-500', '-500')} bg-primary text-slate-900`}
                   >
                     {isSaving ? (

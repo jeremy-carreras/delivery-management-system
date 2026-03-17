@@ -34,6 +34,8 @@ export interface Order {
   deliveryAddress: string;
   status: 'Pending' | 'Accepted' | 'Preparando' | 'En reparto' | 'Entregado' | 'Cancelled';
   cancellationReason?: string;
+  assigned_to?: string;
+  repartidor?: { id: string; name: string; username: string; phone: string };
 }
 
 // ── Async Thunks ─────────────────────────────────────────────────────────────
@@ -76,10 +78,13 @@ export const registerUser = createAsyncThunk('auth/registerUser', async (userDat
   return res.data;
 });
 
-export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (phone?: string) => {
-  const res = await api.getOrders(phone);
-  return res.data;
-});
+export const fetchOrders = createAsyncThunk(
+  'orders/fetchOrders',
+  async (params?: { phone?: string; userId?: string; userRole?: UserRole }) => {
+    const res = await api.getOrders(params?.phone, params?.userId, params?.userRole);
+    return res.data;
+  }
+);
 
 export const createOrderEntry = createAsyncThunk('orders/createOrderEntry', async (orderData: Partial<Order>) => {
   const res = await api.createOrder({
@@ -180,6 +185,8 @@ const ordersSlice = createSlice({
           deliveryAddress: o.delivery_address,
           status: o.status,
           cancellationReason: o.cancellation_reason || undefined,
+          assigned_to: o.assigned_to || undefined,
+          repartidor: o.repartidor || undefined,
           items: (o.items || []).map((item: any) => ({
             id: item.id,
             cartItemId: item.id,
@@ -190,7 +197,7 @@ const ordersSlice = createSlice({
             unit: '',
             category: '',
             breadType: item.bread_type || undefined,
-            flavors: item.flavors ? (typeof item.flavors === 'string' ? JSON.parse(item.flavors) : item.flavors) : undefined,
+            flavors: item.flavors ? (typeof item.flavors === 'string' ? JSON.parse(item.flavors) : item.flavors) : [],
           })),
         }));
       })
@@ -320,12 +327,14 @@ const menuSlice = createSlice({
 export const { addProduct, updateProduct, deleteProduct, addFlavor, deleteFlavor, addBreadType, deleteBreadType, addCategory, deleteCategory, renameCategory, updateCategoryType } = menuSlice.actions;
 
 // ── Auth slice ───────────────────────────────────────────────────────────────
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'repartidor' | 'preparador';
 
 interface AuthUser {
+  id?: string;
   username: string;
   role: UserRole;
   phone: string;
+  name?: string;
 }
 
 interface AuthState {

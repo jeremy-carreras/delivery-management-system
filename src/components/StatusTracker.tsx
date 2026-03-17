@@ -10,7 +10,7 @@ const STATUS_CONFIG: Record<OrderStatus, { icon: string; bg: string; text: strin
   Pending:      { icon: 'hourglass_top',    bg: 'bg-yellow-50',  text: 'text-yellow-600', label: 'Pendiente' },
   Accepted:     { icon: 'thumb_up',         bg: 'bg-blue-50',    text: 'text-blue-600',   label: 'Aceptado' },
   Preparando:   { icon: 'soup_kitchen',     bg: 'bg-orange-50',  text: 'text-orange-500', label: 'En preparación' },
-  'En reparto': { icon: 'electric_moped',   bg: 'bg-purple-50',  text: 'text-purple-600', label: 'En reparto' },
+  'En reparto': { icon: 'electric_moped',   bg: 'bg-purple-600', text: 'text-slate-900', label: 'En reparto' },
   Entregado:    { icon: 'check_circle',     bg: 'bg-green-50',   text: 'text-green-600',  label: 'Entregado' },
   Cancelled:    { icon: 'cancel',           bg: 'bg-red-50',     text: 'text-red-500',    label: 'Cancelado' },
 };

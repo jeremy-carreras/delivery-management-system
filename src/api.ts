@@ -30,7 +30,14 @@ export const updateCategory = (id: string | number, data: any) => fetchAPI(`/cat
 export const deleteCategory = (id: string | number) => fetchAPI(`/categories/${id}`, { method: 'DELETE' });
 
 // ── Orders ───────────────────────────────────────────────────────────────────
-export const getOrders = (phone?: string) => fetchAPI(phone ? `/orders?phone=${encodeURIComponent(phone)}` : '/orders');
+export const getOrders = (phone?: string, userId?: string, userRole?: string) => {
+  const query = new URLSearchParams();
+  if (phone) query.append('phone', phone);
+  if (userId) query.append('userId', userId);
+  if (userRole) query.append('userRole', userRole);
+  const qStr = query.toString();
+  return fetchAPI(qStr ? `/orders?${qStr}` : '/orders');
+};
 export const getOrder = (id: string | number) => fetchAPI(`/orders/${id}`);
 export const createOrder = (data: any) => fetchAPI('/orders', { method: 'POST', body: JSON.stringify(data) });
 export const updateOrder = (id: string | number, data: any) => fetchAPI(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(data) });
