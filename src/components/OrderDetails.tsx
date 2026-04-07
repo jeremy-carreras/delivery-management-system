@@ -190,9 +190,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                 <span className="material-symbols-outlined">two_wheeler</span>
               </div>
               <div className="flex-1">
-                <p className="text-xs text-indigo-400 font-semibold mb-0.5">Repartidor asignado</p>
+                <p className="text-xs font-semibold mb-0.5">Repartidor asignado</p>
                 <p className="text-sm font-bold text-slate-800 leading-tight">{order.repartidor.name}</p>
-                <p className="text-xs text-indigo-500/80 font-medium">{order.repartidor.phone}</p>
+                <p className="text-xs font-medium">{order.repartidor.phone}</p>
               </div>
             </div>
           )}

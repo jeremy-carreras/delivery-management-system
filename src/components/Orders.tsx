@@ -75,12 +75,8 @@ export const Orders: React.FC<OrdersProps> = () => {
     return orderTime >= from && orderTime <= to;
   });
 
-  if (activeTab === 'En proceso') {
-    filteredHistory = filteredHistory.filter(o =>
-      ['Accepted', 'Preparando', 'En reparto'].includes(o.status)
-    );
-  } else if (activeTab !== 'All Orders') {
-    filteredHistory = filteredHistory.filter(o => o.status.toLowerCase() === activeTab.toLowerCase());
+  if (activeTab !== 'All Orders') {
+    filteredHistory = filteredHistory.filter(o => o.status === activeTab);
   }
 
   if (searchQuery.trim()) {
@@ -210,17 +206,27 @@ export const Orders: React.FC<OrdersProps> = () => {
 
         <div className="px-4">
           <div className="flex gap-8 overflow-x-auto no-scrollbar">
-            {['All Orders', 'Pending', 'En proceso', 'Entregado', 'Cancelled'].map((tab) => (
+            {['All Orders', 'Pending', 'Accepted', 'Preparando', 'En reparto', 'Entregado', 'Cancelled'].map((tab) => {
+              const displayTabInfo: Record<string, string> = {
+                'All Orders': 'Todos',
+                'Pending': 'Pendientes',
+                'Accepted': 'Aceptados',
+                'Preparando': 'En cocina',
+                'En reparto': 'En camino',
+                'Entregado': 'Entregados',
+                'Cancelled': 'Cancelados'
+              };
+              return (
               <button 
                 key={tab} 
                 onClick={() => setActiveTab(tab)}
                 className={`flex flex-col items-center justify-center border-b-2 pb-3 pt-2 whitespace-nowrap text-sm font-bold ${
-                  activeTab === tab ? 'border-primary text-slate-900' : 'border-transparent text-slate-500'
-                }`}
+                  activeTab === tab ? 'border-primary text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
+                } transition-colors`}
               >
-                {tab}
+                {displayTabInfo[tab] || tab}
               </button>
-            ))}
+            )})}
           </div>
         </div>
       </header>
@@ -237,7 +243,7 @@ export const Orders: React.FC<OrdersProps> = () => {
           </button>
         </div>
 
-        {loading ? (
+        {(loading && history.length === 0) ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="material-symbols-outlined text-4xl text-primary animate-spin mb-3">refresh</span>
             <h3 className="font-bold text-lg text-slate-700">Cargando pedidos...</h3>

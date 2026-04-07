@@ -124,9 +124,9 @@ export const Login: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-center text-slate-500 text-xs mt-6">
+        {/*<p className="text-center text-slate-500 text-xs mt-6">
           Demo: <span className="text-slate-400">admin/admin</span>
-        </p>
+        </p>*/}
 
         <p className="text-center text-slate-500 text-sm mt-4">
           Don't have an account?{' '}
