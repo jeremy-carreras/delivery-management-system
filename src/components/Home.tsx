@@ -131,14 +131,29 @@ export const Home: React.FC<HomeProps> = () => {
                   onClick={() => {
                     navigate('/orders');
                   }}
-                  className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-200 transition-all flex items-center justify-center gap-2 group border border-slate-200"
+                  className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-200 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
                 >
                   <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">receipt_long</span>
                   Ver mis pedidos
                 </button>
                 <button 
                   onClick={() => {
+                    if (!isProfileComplete) {
+                      setShowProfileForCart(true);
+                      return;
+                    }
                     setShowWelcome(false);
+                    navigate('/ordersHistory');
+                  }}
+                  className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-200 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
+                >
+                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">history</span>
+                  Repetir pedido
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowWelcome(false);
+                    navigate('/profile')
                   }}
                   className="w-full py-4 bg-white text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
                 >
