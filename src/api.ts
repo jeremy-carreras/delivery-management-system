@@ -42,6 +42,7 @@ export const getOrder = (id: string | number) => fetchAPI(`/orders/${id}`);
 export const createOrder = (data: any) => fetchAPI('/orders', { method: 'POST', body: JSON.stringify(data) });
 export const updateOrder = (id: string | number, data: any) => fetchAPI(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteOrder = (id: string | number) => fetchAPI(`/orders/${id}`, { method: 'DELETE' });
+export const notifyArrival = (id: string | number) => fetchAPI(`/orders/${id}/arrived`, { method: 'POST' });
 
 // ── Users ────────────────────────────────────────────────────────────────────
 export const login = (data: any) => fetchAPI('/login', { method: 'POST', body: JSON.stringify(data) });

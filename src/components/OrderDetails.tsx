@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, UserRole, AppDispatch } from '../store';
 import { useNavigate } from 'react-router-dom';
-import { updateOrder, getUsers } from '../api';
+import { updateOrder, getUsers, notifyArrival } from '../api';
 import { fetchOrders } from '../store';
 import { StatusTracker } from './StatusTracker';
 
@@ -50,6 +50,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
   const [drivers, setDrivers] = useState<any[]>([]);
   const [customReason, setCustomReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isNotifying, setIsNotifying] = useState(false);
+  const [arrivalSent, setArrivalSent] = useState(false);
   const order = history.find(o => o.id === orderId);
 
   React.useEffect(() => {
@@ -309,27 +311,59 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
       {/* Action Bar (Admin or Repartidor when status is En reparto) */}
       {((userRole === 'admin') || (userRole === 'repartidor' && currentStatus === 'En reparto')) && !isTerminal && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100 max-w-2xl mx-auto">
-          <div className="flex gap-3">
-            {/* Next step button */}
-            {nextStatus && (
+          <div className="flex flex-col gap-2">
+            {/* Arrival notification button — only for repartidor */}
+            {userRole === 'repartidor' && currentStatus === 'En reparto' && (
               <button
-                onClick={() => setPendingStatus(nextStatus)}
-                className="flex-1 py-3 px-4 rounded-xl font-bold bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                onClick={async () => {
+                  if (arrivalSent) return;
+                  setIsNotifying(true);
+                  try {
+                    await notifyArrival(order.id);
+                    setArrivalSent(true);
+                  } catch (err) {
+                    console.error('Error notifying arrival:', err);
+                  } finally {
+                    setIsNotifying(false);
+                  }
+                }}
+                disabled={isNotifying || arrivalSent}
+                className={`w-full py-3 px-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm ${
+                  arrivalSent
+                    ? 'bg-green-100 text-green-700 cursor-default'
+                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100'
+                }`}
               >
-                <span className="material-symbols-outlined text-[20px]">{NEXT_STEP_ICON[currentStatus] || 'arrow_forward'}</span>
-                {NEXT_STEP_LABEL[currentStatus] || 'Siguiente'}
+                {isNotifying ? (
+                  <span className="block w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span className="material-symbols-outlined text-[20px]">{arrivalSent ? 'check_circle' : 'location_on'}</span>
+                )}
+                {arrivalSent ? '¡Aviso enviado!' : 'Avisar que llegué'}
               </button>
             )}
-            {/* Cancel button — only for admin or specific conditions if needed */}
-            {userRole === 'admin' && (
-              <button
-                onClick={() => setPendingStatus('Cancelled')}
-                className={`py-3 px-4 rounded-xl font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 border border-red-100 ${nextStatus ? 'w-auto' : 'flex-1'}`}
-              >
-                <span className="material-symbols-outlined text-[20px]">cancel</span>
-                Cancelar
-              </button>
-            )}
+            <div className="flex gap-3">
+              {/* Next step button */}
+              {nextStatus && (
+                <button
+                  onClick={() => setPendingStatus(nextStatus)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[20px]">{NEXT_STEP_ICON[currentStatus] || 'arrow_forward'}</span>
+                  {NEXT_STEP_LABEL[currentStatus] || 'Siguiente'}
+                </button>
+              )}
+              {/* Cancel button — only for admin */}
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => setPendingStatus('Cancelled')}
+                  className={`py-3 px-4 rounded-xl font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 border border-red-100 ${nextStatus ? 'w-auto' : 'flex-1'}`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">cancel</span>
+                  Cancelar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
