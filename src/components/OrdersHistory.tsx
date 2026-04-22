@@ -178,7 +178,6 @@ export const OrdersHistory: React.FC = () => {
                 
                 <button
                   onClick={() => handleRepeatOrder(order)}
-                  disabled={order.status === 'Cancelled'}
                   className="size-12 shrink-0 bg-primary/10 hover:bg-primary text-primary hover:text-slate-900 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="material-symbols-outlined text-3xl">chevron_right</span>

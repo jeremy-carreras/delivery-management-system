@@ -9,11 +9,12 @@ import { useNavigate } from 'react-router-dom';
 interface ProfileModalProps {
   isOpen: boolean;
   onClose?: () => void;
+  onSuccess?: () => void;
   requireClose?: boolean;
   phoneOnly?: boolean;
 }
 
-export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, requireClose = false, phoneOnly = false }) => {
+export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSuccess, requireClose = false, phoneOnly = false }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const profile = useSelector((state: RootState) => state.profile);
@@ -53,11 +54,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, req
     if (phoneOnly) {
       if (!draftPhone.trim()) return;
       dispatch(setProfile({ name: profile.name, phone: draftPhone.trim(), address: profile.address }));
+      if (onSuccess) onSuccess();
       if (onClose) onClose();
       return;
     }
     if (!draftName.trim() || !draftPhone.trim() || !isAddressSelected) return;
     dispatch(setProfile({ name: draftName.trim(), phone: draftPhone.trim(), address: draftAddress.trim() }));
+    if (onSuccess) onSuccess();
     if (onClose) onClose();
   };
 
@@ -96,6 +99,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, req
                       type="tel"
                       value={draftPhone}
                       onChange={(e) => setDraftPhone(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveProfile();
+                      }}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                       placeholder="ej. 5549593871"
                       autoFocus
@@ -129,6 +135,9 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, req
                       type="tel"
                       value={draftPhone}
                       onChange={(e) => setDraftPhone(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveProfile();
+                      }}
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                       placeholder="ej. 5549593871"
                     />
