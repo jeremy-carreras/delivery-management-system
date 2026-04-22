@@ -54,7 +54,7 @@ export const Login: React.FC = () => {
           <div className="bg-primary p-3 rounded-2xl mb-4 shadow-lg shadow-primary/30">
             <span className="material-symbols-outlined text-background-dark text-4xl font-bold">bolt</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">FlashDrop</h1>
+          <h1 className="text-3xl font-bold tracking-tight">PideBorolas</h1>
           <p className="text-slate-500 text-sm mt-1">Delivery Management</p>
         </div>
 

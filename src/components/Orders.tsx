@@ -282,74 +282,249 @@ export const Orders: React.FC<OrdersProps> = () => {
 
             return (
               <div key={order.id} className="bg-white rounded-xl border border-primary/10 overflow-hidden shadow-sm">
-                {/* Card header — always visible */}
-                <div className="p-4 flex gap-3">
-                  <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 mt-0.5">
-                    <span className="material-symbols-outlined text-slate-400 text-xl">receipt_long</span>
+
+                {/* ── MOBILE: stacked layout ── */}
+                <div className={isStaff ? 'sm:hidden' : ''}>
+                  <div className="p-4 flex gap-3">
+                    <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 mt-0.5">
+                      <span className="material-symbols-outlined text-slate-400 text-xl">receipt_long</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-xs font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold text-slate-900 ml-2 shrink-0">${order.total.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <div className="flex flex-col min-w-0 pr-4">
+                          <h4 className="text-base font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
+                          {(isAdmin || auth.currentUser?.role === 'preparador') && order.repartidor && (
+                            <div className="flex items-center gap-1 mt-1 text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full w-max">
+                              <span className="material-symbols-outlined text-[12px]">two_wheeler</span>
+                              <span className="truncate max-w-[100px]">{order.repartidor.name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className={`ml-2 shrink-0 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor} self-start mt-1`}>{statusLabel}</span>
+                      </div>
+                      {!isStaff && order.status !== 'Cancelled' && (
+                        <div className="mt-3 mb-1"><StatusTracker status={order.status as any} variant="compact" /></div>
+                      )}
+                      {!isStaff && (
+                        <div className="flex items-center gap-1 mt-2">
+                          <span className="material-symbols-outlined text-slate-400 text-[14px]">phone</span>
+                          <p className="text-xs text-slate-500 font-medium">{order.customerPhone || '—'}</p>
+                        </div>
+                      )}
+                      {!isStaff && (
+                        <div className="flex items-start gap-1 mt-1">
+                          <span className="material-symbols-outlined text-slate-400 text-[14px] mt-0.5">location_on</span>
+                          <p className="mt-2 text-xs text-slate-500 leading-snug line-clamp-1">{order.deliveryAddress || '—'}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    {/* Row 1: Order ID + date/time + Total */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                  <div className="px-4 pb-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <p className="text-xs text-slate-500 truncate flex-1">
+                          <span className="font-semibold text-slate-700">{order.items.reduce((acc, i) => acc + i.quantity, 0)}</span> {order.items.reduce((acc, i) => acc + i.quantity, 0) === 1 ? 'producto' : 'productos'}
+                          {!isExpanded && order.items.length > 0 && <span className="ml-1 text-slate-400">· {order.items.map(i => i.name).join(', ')}</span>}
+                        </p>
+                        <button onClick={() => toggleOrder(order.id)} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+                          <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                        </button>
+                      </div>
+
+                      {/* Staff actions next to accordion on mobile (only if screen > 480px) */}
+                      {isStaff && (
+                        <div className="hidden min-[480px]:flex gap-1.5 ml-2 shrink-0">
+                          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`} target="_blank" rel="noopener noreferrer"
+                            className="py-1 px-2.5 text-[12px] font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}>
+                            <span className="material-symbols-outlined text-[14px]">map</span> Mapa
+                          </a>
+                          <button onClick={() => navigate(`/orders/${order.id}`)}
+                            className="py-1 px-2.5 text-[12px] font-bold rounded-lg bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center gap-1">
+                              Ver detalle
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {isExpanded && (
+                      <div className="pb-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {isStaff && (
+                          <div className="bg-slate-50 rounded-lg p-2.5 space-y-1.5 border border-slate-100 mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-slate-400 text-xs">phone</span>
+                              <span className="text-xs font-bold text-slate-700">{order.customerPhone || '—'}</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="material-symbols-outlined text-slate-400 text-xs mt-0.5">location_on</span>
+                              <span className="text-xs text-slate-600 leading-relaxed">{order.deliveryAddress || '—'}</span>
+                            </div>
+                          </div>
+                        )}
+                        {order.items.map(item => (
+                          <div key={item.id} className="flex justify-between items-center px-1">
+                            <span className="text-sm text-slate-600 truncate mr-2">{item.name}</span>
+                            <div className="text-sm text-slate-500 whitespace-nowrap shrink-0">
+                              x{item.quantity} <span className="font-semibold text-slate-700 ml-1">${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions div: visible for clients, or for staff on very small mobile screens */}
+                  <div className={`flex gap-2 px-4 pb-4 ${isStaff ? 'min-[480px]:hidden' : ''}`}>
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 py-2 text-sm font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center gap-1 text-slate-700"
+                      onClick={(e) => e.stopPropagation()}>
+                      <span className="material-symbols-outlined text-[16px]">map</span> Mapa
+                    </a>
+                    <button onClick={() => navigate(`/orders/${order.id}`)}
+                      className="flex-1 py-2 text-sm font-semibold rounded-lg bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center justify-center gap-1">
+                      Ver detalle
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── INTERMEDIATE: 2 rows layout (staff only, sm to lg) ── */}
+                {isStaff && (
+                  <div className="hidden sm:flex lg:hidden flex-col gap-3 p-4">
+                    {/* Row 1: Info */}
+                    <div className="flex items-center gap-4">
+                      <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                        <span className="material-symbols-outlined text-slate-400 text-xl">receipt_long</span>
+                      </div>
+                      <div className="w-28 shrink-0">
+                        <p className="text-[11px] font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                          {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
                         </p>
                       </div>
-                      <span className="text-sm font-bold text-slate-900 ml-2 shrink-0">${order.total.toFixed(2)}</span>
-                    </div>
-                    {/* Row 2: Customer name + status badge */}
-                    <div className="flex items-center justify-between mt-0.5">
-                      <div className="flex flex-col min-w-0 pr-4">
-                        <h4 className="text-base font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
-                        {/* Only show the driver badge if the user is an admin or preparador and there is an assigned driver */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
                         {(isAdmin || auth.currentUser?.role === 'preparador') && order.repartidor && (
-                          <div className="flex items-center gap-1 mt-1 text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full w-max">
+                          <div className="flex items-center gap-1 text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full w-max mt-1">
                             <span className="material-symbols-outlined text-[12px]">two_wheeler</span>
                             <span className="truncate max-w-[100px]">{order.repartidor.name}</span>
                           </div>
                         )}
                       </div>
-                      <span className={`ml-2 shrink-0 text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor} self-start mt-1`}>{statusLabel}</span>
-                    </div>
-                    {/* Row 3: Tracker animation (only if not cancelled) */}
-                    {order.status !== 'Cancelled' && (
-                      <div className="mt-3 mb-1">
-                        <StatusTracker status={order.status as any} variant="compact" />
-                      </div>
-                    )}
-                    {/* Row 4: Phone */}
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-slate-400 text-[14px]">phone</span>
-                        <p className="text-xs text-slate-500 font-medium">{order.customerPhone || '—'}</p>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <p className="text-sm font-bold text-slate-900">${order.total.toFixed(2)}</p>
+                        <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
                       </div>
                     </div>
-                    {/* Row 5: Address truncated */}
-                    <div className="flex items-start gap-1 mt-1">
-                      <span className="material-symbols-outlined text-slate-400 text-[14px] mt-0.5">location_on</span>
-                      <p className=" mt-2 text-xs text-slate-500 leading-snug line-clamp-1">{order.deliveryAddress || '—'}</p>
+                    
+                    {/* Row 2: Products + Actions */}
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0 mr-4">
+                        <p className="text-xs text-slate-600 truncate flex-1">
+                          <span className="font-bold text-slate-800">{order.items.reduce((acc, i) => acc + i.quantity, 0)}</span> prod.
+                          {!isExpanded && order.items.length > 0 && <span className="ml-1 text-slate-500">· {order.items.map(i => i.name).join(', ')}</span>}
+                        </p>
+                        <button onClick={() => toggleOrder(order.id)} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 transition-colors shrink-0">
+                          <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                        </button>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`} target="_blank" rel="noopener noreferrer"
+                          className="py-1.5 px-4 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors flex items-center gap-1 text-slate-700 whitespace-nowrap"
+                          onClick={(e) => e.stopPropagation()}>
+                          <span className="material-symbols-outlined text-[16px]">map</span> Mapa
+                        </a>
+                        <button onClick={() => navigate(`/orders/${order.id}`)}
+                          className="py-1.5 px-4 text-xs font-semibold rounded-lg bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center gap-1 whitespace-nowrap">
+                          Ver detalle
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Expandable items section */}
-                <div className="px-4 pb-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between py-2">
-                    <p className="text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">{order.items.reduce((acc, item) => acc + item.quantity, 0)}</span> {order.items.reduce((acc, item) => acc + item.quantity, 0) === 1 ? 'producto' : 'productos'}
-                      {!isExpanded && order.items.length > 0 && <span className="ml-1 text-slate-400">· {order.items.map(i => i.name).join(', ')}</span>}
-                    </p>
-                    <button
-                      onClick={() => toggleOrder(order.id)}
-                      className="p-1 rounded-full hover:bg-slate-100 text-slate-400 transition-colors"
-                    >
-                      <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
-                    </button>
+                {/* ── DESKTOP: single row layout (staff only, lg+) ── */}
+                {isStaff && (
+                  <div className="hidden lg:flex items-center gap-4 py-3 px-4">
+                    {/* Icon */}
+                    <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                      <span className="material-symbols-outlined text-slate-400 text-xl">receipt_long</span>
+                    </div>
+
+                    {/* ID + Date */}
+                    <div className="w-28 shrink-0">
+                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                        {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                      </p>
+                    </div>
+
+                    {/* Customer + driver */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
+                      {(isAdmin || auth.currentUser?.role === 'preparador') && order.repartidor && (
+                        <div className="flex items-center gap-1 text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full w-max mt-1">
+                          <span className="material-symbols-outlined text-[12px]">two_wheeler</span>
+                          <span className="truncate max-w-[100px]">{order.repartidor.name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Products summary + accordion toggle */}
+                    <div className="flex-[2] min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-slate-600 truncate flex-1">
+                          <span className="font-bold text-slate-800">{order.items.reduce((acc, i) => acc + i.quantity, 0)}</span> prod.
+                          {!isExpanded && order.items.length > 0 && <span className="ml-1 text-slate-500">· {order.items.map(i => i.name).join(', ')}</span>}
+                        </p>
+                        <button onClick={() => toggleOrder(order.id)} className="p-1 rounded-full hover:bg-slate-100 text-slate-400 transition-colors shrink-0">
+                          <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Total + Status */}
+                    <div className="w-24 shrink-0 flex flex-col items-end gap-1">
+                      <p className="text-sm font-bold text-slate-900">${order.total.toFixed(2)}</p>
+                      <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 shrink-0 border-l border-slate-100 pl-4">
+                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`} target="_blank" rel="noopener noreferrer"
+                        className="py-2 px-4 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors flex items-center gap-1 text-slate-700 whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}>
+                        <span className="material-symbols-outlined text-[16px]">map</span> Mapa
+                      </a>
+                      <button onClick={() => navigate(`/orders/${order.id}`)}
+                        className="py-2 px-4 text-xs font-semibold rounded-lg bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center gap-1 whitespace-nowrap">
+                        Ver detalle
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  {isExpanded && (
-                    <div className="pb-2 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* Expanded accordion for intermediate/desktop (staff) */}
+                {isStaff && isExpanded && (
+                  <div className="hidden sm:block px-4 pb-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="bg-slate-50 rounded-lg p-2.5 space-y-1.5 border border-slate-100 mt-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-slate-400 text-xs">phone</span>
+                        <span className="text-xs font-bold text-slate-700">{order.customerPhone || '—'}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="material-symbols-outlined text-slate-400 text-xs mt-0.5">location_on</span>
+                        <span className="text-xs text-slate-600 leading-relaxed">{order.deliveryAddress || '—'}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
                       {order.items.map(item => (
                         <div key={item.id} className="flex justify-between items-center px-1">
                           <span className="text-sm text-slate-600 truncate mr-2">{item.name}</span>
@@ -359,27 +534,9 @@ export const Orders: React.FC<OrdersProps> = () => {
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* Actions */}
-                <div className="flex gap-2 px-4 pb-4">
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-2 text-sm font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center gap-1 text-slate-700"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="material-symbols-outlined text-[16px]">map</span> Mapa
-                  </a>
-                  <button
-                    onClick={() => navigate(`/orders/${order.id}`)}
-                    className="flex-1 py-2 text-sm font-semibold rounded-lg bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center justify-center gap-1"
-                  >
-                    Ver detalle
-                  </button>
-                </div>
               </div>
             );
           })

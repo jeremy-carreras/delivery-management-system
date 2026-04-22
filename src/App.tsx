@@ -76,7 +76,7 @@ const AppContent: React.FC = () => {
               <div className="bg-primary pt-1 pb-0 px-1 rounded-lg">
                 <span className="material-symbols-outlined text-background-dark text-2xl font-bold">bolt</span>
               </div>
-              <h1 className="text-xl font-bold tracking-tight">FlashDrop</h1>
+              <h1 className="text-xl font-bold tracking-tight">Pide Borolas</h1>
             </div>
             <div className="flex items-center gap-4">
               <button
