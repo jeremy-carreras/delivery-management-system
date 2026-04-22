@@ -25,6 +25,7 @@ export const Home: React.FC<HomeProps> = () => {
   // Show welcome modal whenever profile is not complete AND user is not admin
   const [showWelcome, setShowWelcome] = React.useState(!isProfileComplete && !isAdmin);
   const [showProfileForCart, setShowProfileForCart] = React.useState(false);
+  const [pendingAction, setPendingAction] = React.useState<{type: string, payload?: any} | null>(null);
 
   const [selectedBakeryProduct, setSelectedBakeryProduct] = React.useState<any | null>(null);
   const [selectedFlavors, setSelectedFlavors] = React.useState<string[]>([]);
@@ -48,6 +49,7 @@ export const Home: React.FC<HomeProps> = () => {
 
   const handleAddToCart = (product: any) => {
     if (!profile.name.trim() || !profile.address.trim()) {
+      setPendingAction({ type: 'ADD_TO_CART', payload: product });
       setShowProfileForCart(true);
       return;
     }
@@ -60,6 +62,26 @@ export const Home: React.FC<HomeProps> = () => {
     }
     dispatch(addToCart(product));
     showToast(`${product.name} fue añadido`);
+  };
+
+  const handlePendingAction = () => {
+    if (!pendingAction) return;
+    if (pendingAction.type === 'REPEAT_ORDER') {
+      setShowWelcome(false);
+      navigate('/ordersHistory');
+    } else if (pendingAction.type === 'ADD_TO_CART') {
+      const product = pendingAction.payload;
+      const cat = menuCategories.find(c => c.name === product.category);
+      if (cat && cat.type === 'Custom') {
+        setSelectedBakeryProduct(product);
+        setSelectedFlavors([]);
+        setSelectedBreadType(null);
+      } else {
+        dispatch(addToCart(product));
+        showToast(`${product.name} fue añadido`);
+      }
+    }
+    setPendingAction(null);
   };
 
   React.useEffect(() => {
@@ -139,6 +161,7 @@ export const Home: React.FC<HomeProps> = () => {
                 <button 
                   onClick={() => {
                     if (!isProfileComplete) {
+                      setPendingAction({ type: 'REPEAT_ORDER' });
                       setShowProfileForCart(true);
                       return;
                     }
@@ -167,7 +190,11 @@ export const Home: React.FC<HomeProps> = () => {
       </AnimatePresence>
 
       {/* Cart profile modal — triggered when adding to cart without full profile */}
-      <ProfileModal isOpen={showProfileForCart} onClose={() => setShowProfileForCart(false)} />
+      <ProfileModal 
+        isOpen={showProfileForCart} 
+        onClose={() => setShowProfileForCart(false)} 
+        onSuccess={handlePendingAction}
+      />
 
       {/* Bakery Flavor Modal */}
       <AnimatePresence>
