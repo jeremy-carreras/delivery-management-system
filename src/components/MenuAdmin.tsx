@@ -399,7 +399,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
               {filteredProducts.map(p => (
                 <div key={p.id} className={`flex gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-100 items-center ${p.isAvailable === false ? 'opacity-60 grayscale-[0.5]' : ''}`}>
                   <div className="relative">
-                    <img src={p.image} alt={p.name} className="size-16 object-cover rounded-lg bg-slate-100" />
+                    <img src={p.image} alt={p.name} className="size-16 object-cover rounded-lg bg-slate-100" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVlMSI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZjFmNWY5Ii8+PHBhdGggZD0iTTIxIDE5VjVjMC0xLjEtLjktMi0yLTJINWMtMS4xIDAtMiAuOS0yIDJ2MTRjMCAxLjEuOSAyIDIgMmgxNGMxLjEgMCAyLS45IDItMnpNOC41IDEzLjVsMi41IDMuMDFMMTQuNSAxMmw0LjUgNkg1bDMuNS00LjV6Ii8+PC9zdmc+'; }} />
                     {p.isAvailable === false && (
                       <div className="absolute -top-2 -right-2 bg-slate-800 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">
                         Hidden
