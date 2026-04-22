@@ -398,27 +398,27 @@ export const Orders: React.FC<OrdersProps> = () => {
                 {/* ── INTERMEDIATE: 2 rows layout (staff only, sm to lg) ── */}
                 {isStaff && (
                   <div className="hidden sm:flex lg:hidden flex-col gap-3 p-4">
-                    {/* Row 1: Info */}
-                    <div className="flex items-center gap-4">
+                    {/* Row 1: Info (Dynamic grid to prevent overlap) */}
+                    <div className="grid grid-cols-[40px_auto_1fr_auto] items-center gap-x-4 gap-y-2">
                       <div className="size-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
                         <span className="material-symbols-outlined text-slate-400 text-xl">receipt_long</span>
                       </div>
-                      <div className="w-28 shrink-0">
-                        <p className="text-[11px] font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
-                        <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                      <div className="flex flex-col min-w-[120px]">
+                        <p className="text-[11px] font-bold text-primary uppercase tracking-wider whitespace-nowrap">#{order.id}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">
                           {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
                         </p>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0">
                         <h4 className="text-sm font-bold text-slate-900 truncate">{order.customerName || '—'}</h4>
                         {(isAdmin || auth.currentUser?.role === 'preparador') && order.repartidor && (
                           <div className="flex items-center gap-1 text-[10px] text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded-full w-max mt-1">
                             <span className="material-symbols-outlined text-[12px]">two_wheeler</span>
-                            <span className="truncate max-w-[100px]">{order.repartidor.name}</span>
+                            <span className="truncate max-w-[120px]">{order.repartidor.name}</span>
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
+                      <div className="flex flex-col items-end gap-1 shrink-0 min-w-[90px]">
                         <p className="text-sm font-bold text-slate-900">${order.total.toFixed(2)}</p>
                         <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
                       </div>
@@ -459,8 +459,8 @@ export const Orders: React.FC<OrdersProps> = () => {
                     </div>
 
                     {/* ID + Date */}
-                    <div className="w-28 shrink-0">
-                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
+                    <div className="w-36 shrink-0">
+                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider">#{order.id}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5 truncate">
                         {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
                       </p>
