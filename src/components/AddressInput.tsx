@@ -67,14 +67,36 @@ export const AddressInput: React.FC<AddressInputProps> = ({ value, onChange, onS
 
     setIsSearching(true);
     
-    // Default bias to current general area logic or remove bias. We'll just search globally but with google's smart defaults.
+    // Restrict to CDMX + Estado de México using a bounding box and country restriction
+    const cdmxEdomexBounds = {
+      north: 20.2,
+      south: 18.9,
+      west: -100.0,
+      east: -98.5,
+    };
+
+    const ALLOWED_ZONES = [
+      'Ciudad de México', 'CDMX', 'Mexico City',
+      'Estado de México', 'Edo. de Méx.', 'Edo. Méx.', 'State of Mexico',
+    ];
+
     autocompleteService.current.getPlacePredictions(
-      { input: query },
+      {
+        input: query,
+        componentRestrictions: { country: 'mx' },
+        bounds: new window.google.maps.LatLngBounds(
+          { lat: cdmxEdomexBounds.south, lng: cdmxEdomexBounds.west }, // SW
+          { lat: cdmxEdomexBounds.north, lng: cdmxEdomexBounds.east }  // NE
+        ),
+      },
       (predictions, status) => {
         setIsSearching(false);
         if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          const filtered = predictions.filter(p =>
+            ALLOWED_ZONES.some(zone => p.description.includes(zone))
+          );
           setSuggestions(
-            predictions.map(p => ({
+            filtered.map(p => ({
               place_id: p.place_id,
               description: p.description
             }))

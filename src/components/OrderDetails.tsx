@@ -179,7 +179,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold text-slate-900">{statusCfg.label}</h3>
-              <p className="text-sm text-slate-500">Pedido en FlashDrop</p>
+              <p className="text-sm text-slate-500">PideBorolas</p>
             </div>
           </div>
 

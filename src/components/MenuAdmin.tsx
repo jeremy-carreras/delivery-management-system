@@ -5,6 +5,7 @@ import { Category } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import * as api from '../api';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface MenuAdminProps {}
 
@@ -43,6 +44,10 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
   const [editingBreadTypeName, setEditingBreadTypeName] = useState('');
   
   const [isSaving, setIsSaving] = useState(false);
+
+  // Delete confirmation state: stores { type, id, label } of item pending deletion
+  type PendingDelete = { type: 'product' | 'flavor' | 'breadType' | 'category'; id: string; label: string } | null;
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
 
   const handleSaveProduct = async () => {
     setFormError(null);
@@ -122,6 +127,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
       console.error(err);
     } finally {
       setIsSaving(false);
+      setPendingDelete(null);
     }
   };
 
@@ -159,6 +165,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
       console.error(err);
     } finally {
       setIsSaving(false);
+      setPendingDelete(null);
     }
   };
 
@@ -191,7 +198,16 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
       await api.deleteBreadType(id);
       dispatch(fetchMenuData());
     } catch (err) { console.error(err); }
-    finally { setIsSaving(false); }
+    finally { setIsSaving(false); setPendingDelete(null); }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    setIsSaving(true);
+    try {
+      await api.deleteCategory(id);
+      dispatch(fetchMenuData());
+    } catch (err) { console.error(err); }
+    finally { setIsSaving(false); setPendingDelete(null); }
   };
 
   const handleAddCategory = async () => {
@@ -398,7 +414,10 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                     <button onClick={() => handleEditProduct(p)} className="p-1.5 bg-slate-200 rounded-lg hover:bg-slate-300 text-slate-900">
                       <span className="material-symbols-outlined text-sm">edit</span>
                     </button>
-                    <button onClick={() => handleDeleteProduct(p.id)} className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white">
+                    <button
+                      onClick={() => setPendingDelete({ type: 'product', id: p.id, label: `el producto "${p.name}"` })}
+                      className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white"
+                    >
                       <span className="material-symbols-outlined text-sm">delete</span>
                     </button>
                   </div>
@@ -468,7 +487,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                           <span className="material-symbols-outlined text-sm">edit</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteFlavor(f.id)}
+                          onClick={() => setPendingDelete({ type: 'flavor', id: f.id, label: `el sabor "${f.name}"` })}
                           disabled={isSaving}
                           className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white disabled:opacity-50"
                         >
@@ -542,7 +561,7 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                           <span className="material-symbols-outlined text-sm">edit</span>
                         </button>
                         <button
-                          onClick={() => handleDeleteBreadType(b.id)}
+                          onClick={() => setPendingDelete({ type: 'breadType', id: b.id, label: `la cerveza "${b.name}"` })}
                           disabled={isSaving}
                           className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white disabled:opacity-50"
                         >
@@ -638,11 +657,10 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
                         >
                           <span className="material-symbols-outlined text-sm">edit</span>
                         </button>
-                        <button onClick={async () => {
-                          try {
-                            if (c.id) { await api.deleteCategory(c.id); dispatch(fetchMenuData()); }
-                          }catch(err){}
-                        }} className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white">
+                        <button
+                          onClick={() => setPendingDelete({ type: 'category', id: c.id!, label: `la categoría "${c.name}"` })}
+                          className="p-1.5 bg-red-500 rounded-lg hover:bg-red-600 text-white"
+                        >
                           <span className="material-symbols-outlined text-sm">delete</span>
                         </button>
                       </>
@@ -654,6 +672,20 @@ export const MenuAdmin: React.FC<MenuAdminProps> = () => {
           </div>
         )}
       </main>
+
+      <ConfirmDeleteModal
+        isOpen={!!pendingDelete}
+        itemLabel={pendingDelete?.label || ''}
+        isLoading={isSaving}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          if (pendingDelete.type === 'product') handleDeleteProduct(pendingDelete.id);
+          else if (pendingDelete.type === 'flavor') handleDeleteFlavor(pendingDelete.id);
+          else if (pendingDelete.type === 'breadType') handleDeleteBreadType(pendingDelete.id);
+          else if (pendingDelete.type === 'category') handleDeleteCategory(pendingDelete.id);
+        }}
+      />
     </div>
   );
 };
