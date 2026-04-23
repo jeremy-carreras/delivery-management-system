@@ -40,6 +40,24 @@ const AppContent: React.FC = () => {
 
   const menuStatus = useSelector((state: RootState) => state.menu.status);
 
+  const [hasCriticalError, setHasCriticalError] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleError = (e: ErrorEvent | PromiseRejectionEvent) => {
+      // Prevent the default browser behavior
+      e.preventDefault();
+      setHasCriticalError(true);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleError);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleError);
+    };
+  }, []);
+
   React.useEffect(() => {
     import('./store').then(({ fetchMenuData }) => {
       dispatch(fetchMenuData());
@@ -62,6 +80,18 @@ const AppContent: React.FC = () => {
     : isStaffOnly
       ? (isOrders || isWorkerProfile)
       : (isHome || isOrders || isProfile || isOrdersHistory || isMenuAdmin);
+
+  if (hasCriticalError) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+        <span className="material-symbols-outlined text-red-500 text-6xl mb-4">error</span>
+        <h2 className="text-2xl font-black text-white mb-2">Oops, algo salió mal</h2>
+        <p className="text-slate-400 font-medium mb-6">
+          Inténtalo más tarde o contáctanos por WhatsApp al número <span className="text-white font-bold whitespace-nowrap">1234567890</span>
+        </p>
+      </div>
+    );
+  }
 
   if (menuStatus === 'loading') {
     return <LoadingSpinner fullScreen />;

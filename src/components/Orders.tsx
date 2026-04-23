@@ -14,7 +14,10 @@ export const Orders: React.FC<OrdersProps> = () => {
   const auth = useSelector((state: RootState) => state.auth);
   const profile = useSelector((state: RootState) => state.profile);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('All Orders');
+  const isPreparador = auth.currentUser?.role === 'preparador';
+  const isRepartidor = auth.currentUser?.role === 'repartidor';
+  const defaultTab = isPreparador ? 'Preparando' : isRepartidor ? 'En reparto' : 'All Orders';
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -51,7 +54,7 @@ export const Orders: React.FC<OrdersProps> = () => {
     const triggerFetch = () => {
       if (isStaff || isPhoneSet) {
         dispatch(fetchOrders({
-          phone: isAdmin || auth.currentUser?.role === 'repartidor' ? undefined : profile.phone,
+          phone: (isAdmin || auth.currentUser?.role === 'repartidor' || auth.currentUser?.role === 'preparador') ? undefined : profile.phone,
           userId: auth.currentUser?.id,
           userRole: auth.currentUser?.role,
         }));
@@ -64,7 +67,7 @@ export const Orders: React.FC<OrdersProps> = () => {
     return () => clearInterval(intervalId);
   }, [dispatch, isStaff, isAdmin, isPhoneSet, profile.phone, auth.currentUser, POLLING_INTERVAL]);
 
-  let filteredHistory = (isAdmin || auth.currentUser?.role === 'repartidor')
+  let filteredHistory = (isAdmin || auth.currentUser?.role === 'repartidor' || auth.currentUser?.role === 'preparador')
     ? history
     : history.filter(o => o.customerPhone === profile.phone);
 
@@ -116,7 +119,7 @@ export const Orders: React.FC<OrdersProps> = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => dispatch(fetchOrders({
-                phone: isAdmin || auth.currentUser?.role === 'repartidor' ? undefined : profile.phone,
+                phone: (isAdmin || auth.currentUser?.role === 'repartidor' || auth.currentUser?.role === 'preparador') ? undefined : profile.phone,
                 userId: auth.currentUser?.id,
                 userRole: auth.currentUser?.role,
               }))}
@@ -377,6 +380,12 @@ export const Orders: React.FC<OrdersProps> = () => {
                             </div>
                           </div>
                         ))}
+                        {order.notes && (
+                          <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg p-2.5">
+                            <span className="material-symbols-outlined text-amber-500 text-sm mt-0.5 shrink-0">edit_note</span>
+                            <p className="text-xs text-amber-800 leading-relaxed">{order.notes}</p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -534,6 +543,12 @@ export const Orders: React.FC<OrdersProps> = () => {
                         </div>
                       ))}
                     </div>
+                    {order.notes && (
+                      <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg p-2.5 mt-1">
+                        <span className="material-symbols-outlined text-amber-500 text-sm mt-0.5 shrink-0">edit_note</span>
+                        <p className="text-xs text-amber-800 leading-relaxed">{order.notes}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

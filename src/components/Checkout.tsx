@@ -21,6 +21,8 @@ export const Checkout: React.FC<CheckoutProps> = () => {
   const restAddress = addressParts.slice(1).join(',').trim() || '';
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [notes, setNotes] = React.useState('');
+  const [notesOpen, setNotesOpen] = React.useState(false);
 
   const handleConfirmOrder = () => {
     setIsSubmitting(true);
@@ -32,6 +34,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
       customerName: profile.name,
       customerPhone: profile.phone,
       deliveryAddress: profile.address,
+      notes: notes.trim() || undefined,
       status: 'Pending',
     };
 
@@ -129,6 +132,37 @@ export const Checkout: React.FC<CheckoutProps> = () => {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Notes Section */}
+        <section className="space-y-4">
+          <button
+            type="button"
+            onClick={() => setNotesOpen(o => !o)}
+            className="w-full flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm border border-slate-100 text-left hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-2 text-slate-700">
+              <span className="material-symbols-outlined text-primary">edit_note</span>
+              <span className="font-semibold text-sm">Especificaciones de tu pedido</span>
+              {notes.trim() && <span className="size-2 rounded-full bg-primary shrink-0" />}
+            </div>
+            <span className={`material-symbols-outlined text-slate-400 transition-transform duration-200 ${notesOpen ? 'rotate-180' : ''}`}>expand_more</span>
+          </button>
+
+          {notesOpen && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Indicaciones extras, quitar ingredientes, etc."
+                rows={3}
+                autoFocus
+                maxLength={400}
+                className="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+              />
+              <p className="text-[10px] text-slate-400 text-right mt-1 pr-1">{notes.length}/400</p>
+            </div>
+          )}
         </section>
 
         {/*<section className="space-y-4">

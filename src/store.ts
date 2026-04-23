@@ -32,6 +32,7 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   deliveryAddress: string;
+  notes?: string;
   status: 'Pending' | 'Accepted' | 'Preparando' | 'En reparto' | 'Entregado' | 'Cancelled';
   cancellationReason?: string;
   assigned_to?: string;
@@ -92,6 +93,7 @@ export const createOrderEntry = createAsyncThunk('orders/createOrderEntry', asyn
     customer_name: orderData.customerName,
     customer_phone: orderData.customerPhone,
     delivery_address: orderData.deliveryAddress,
+    notes: orderData.notes,
     status: orderData.status,
     items: orderData.items,
   });
@@ -103,6 +105,7 @@ export const createOrderEntry = createAsyncThunk('orders/createOrderEntry', asyn
     customerName: res.data.customer_name,
     customerPhone: res.data.customer_phone,
     deliveryAddress: res.data.delivery_address,
+    notes: res.data.notes || orderData.notes,
     status: res.data.status,
   } as Order;
 });
@@ -183,6 +186,7 @@ const ordersSlice = createSlice({
           customerName: o.customer_name,
           customerPhone: o.customer_phone,
           deliveryAddress: o.delivery_address,
+          notes: o.notes || undefined,
           status: o.status,
           cancellationReason: o.cancellation_reason || undefined,
           assigned_to: o.assigned_to || undefined,
