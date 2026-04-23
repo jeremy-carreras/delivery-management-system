@@ -50,6 +50,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
   const [drivers, setDrivers] = useState<any[]>([]);
   const [customReason, setCustomReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showNotesWarning, setShowNotesWarning] = useState(false);
   const order = history.find(o => o.id === orderId);
 
   React.useEffect(() => {
@@ -67,7 +68,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
   React.useEffect(() => {
     const triggerFetch = () => {
       dispatch(fetchOrders({ 
-        phone: userRole === 'admin' ? undefined : profile.phone, 
+        phone: (userRole === 'admin' || userRole === 'preparador') ? undefined : profile.phone, 
         userId: auth.currentUser?.id, 
         userRole: auth.currentUser?.role 
       }));
@@ -123,7 +124,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
       }
       await updateOrder(order.id, payload);
       await dispatch(fetchOrders({
-        phone: userRole === 'admin' ? undefined : profile.phone,
+        phone: (userRole === 'admin' || userRole === 'preparador') ? undefined : profile.phone,
         userId: auth.currentUser?.id,
         userRole: auth.currentUser?.role,
       }));
@@ -161,7 +162,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
             </div>
           </div>
           <button
-            onClick={() => dispatch(fetchOrders({ phone: userRole === 'admin' ? undefined : profile.phone, userId: auth.currentUser?.id, userRole: auth.currentUser?.role }))}
+            onClick={() => dispatch(fetchOrders({ phone: (userRole === 'admin' || userRole === 'preparador') ? undefined : profile.phone, userId: auth.currentUser?.id, userRole: auth.currentUser?.role }))}
             disabled={loading}
             className={`size-10 flex items-center justify-center rounded-full bg-primary/10 hover:bg-primary/20 transition-colors ${loading ? 'opacity-50' : ''}`}
           >
@@ -304,23 +305,43 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
             </div>
           </div>
         </section>
+
+        {/* Order Notes */}
+        {order.notes && (
+          <section className="space-y-3">
+            <div className="flex items-center gap-2 text-amber-600 px-1">
+              <span className="material-symbols-outlined text-lg">edit_note</span>
+              <h3 className="font-bold">Especificaciones del pedido</h3>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm">
+              <p className="text-sm text-amber-900 leading-relaxed">{order.notes}</p>
+            </div>
+          </section>
+        )}
       </main>
 
-      {/* Action Bar (Admin or Repartidor when status is En reparto) */}
-      {((userRole === 'admin') || (userRole === 'repartidor' && currentStatus === 'En reparto')) && !isTerminal && (
+      {/* Action Bar (Admin, Preparador, or Repartidor when En reparto) */}
+      {((userRole === 'admin') || (userRole === 'preparador') || (userRole === 'repartidor' && currentStatus === 'En reparto')) && !isTerminal && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100 max-w-2xl mx-auto">
           <div className="flex gap-3">
             {/* Next step button */}
             {nextStatus && (
               <button
-                onClick={() => setPendingStatus(nextStatus)}
+                onClick={() => {
+                  // If preparador is about to send to reparto and order has notes, warn first
+                  if (userRole === 'preparador' && nextStatus === 'En reparto' && order?.notes) {
+                    setShowNotesWarning(true);
+                  } else {
+                    setPendingStatus(nextStatus);
+                  }
+                }}
                 className="flex-1 py-3 px-4 rounded-xl font-bold bg-primary text-slate-900 hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 <span className="material-symbols-outlined text-[20px]">{NEXT_STEP_ICON[currentStatus] || 'arrow_forward'}</span>
                 {NEXT_STEP_LABEL[currentStatus] || 'Siguiente'}
               </button>
             )}
-            {/* Cancel button — only for admin or specific conditions if needed */}
+            {/* Cancel button — only for admin */}
             {userRole === 'admin' && (
               <button
                 onClick={() => setPendingStatus('Cancelled')}
@@ -330,6 +351,54 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                 Cancelar
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Notes Warning Modal — shown to preparador before sending to reparto */}
+      {showNotesWarning && order?.notes && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={() => setShowNotesWarning(false)} />
+          <div className="relative z-10 bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 overflow-hidden">
+            {/* Amber header strip */}
+            <div className="bg-amber-400 px-6 pt-6 pb-4 flex flex-col items-center text-center">
+              <div className="size-14 rounded-full bg-white/30 flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-white text-3xl">warning</span>
+              </div>
+              <h3 className="text-lg font-black text-white leading-tight">¡Atención!</h3>
+              <p className="text-amber-100 text-sm mt-1 font-medium">Este pedido tiene especificaciones del cliente</p>
+            </div>
+
+            {/* Notes content */}
+            <div className="px-6 pt-4 pb-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
+                <span className="material-symbols-outlined text-amber-500 text-base mt-0.5 shrink-0">edit_note</span>
+                <p className="text-sm text-amber-900 leading-relaxed italic">"{order.notes}"</p>
+              </div>
+              <p className="text-xs text-slate-500 text-center mt-3 px-2">
+                ¿Confirmaste que estas indicaciones fueron aplicadas antes de enviarlo a reparto?
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 p-6 pt-4">
+              <button
+                onClick={() => setShowNotesWarning(false)}
+                className="flex-1 py-3 px-4 rounded-xl font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-sm"
+              >
+                Revisar
+              </button>
+              <button
+                onClick={() => {
+                  setShowNotesWarning(false);
+                  setPendingStatus('En reparto');
+                }}
+                className="flex-1 py-3 px-4 rounded-xl font-bold bg-amber-400 text-white hover:bg-amber-500 transition-colors text-sm flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[18px]">electric_moped</span>
+                Sí, enviar
+              </button>
+            </div>
           </div>
         </div>
       )}
