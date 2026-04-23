@@ -19,7 +19,14 @@ export const Register: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.name === 'phone') {
+      const val = e.target.value.replace(/\D/g, '');
+      if (val.length <= 10) {
+        setFormData({ ...formData, phone: val });
+      }
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -27,7 +34,7 @@ export const Register: React.FC = () => {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Las contraseñas no coinciden');
       return;
     }
 
@@ -37,11 +44,11 @@ export const Register: React.FC = () => {
       .unwrap()
       .then(() => {
         setLoading(false);
-        navigate('/login', { state: { message: 'Registration successful! Please login.' } });
+        navigate('/login', { state: { message: '¡Registro exitoso! Por favor inicia sesión.' } });
       })
       .catch((err) => {
         setLoading(false);
-        setError(err.message || 'Error occurred during registration');
+        setError(err.message || 'Ocurrió un error durante el registro');
       });
   };
 
@@ -57,7 +64,7 @@ export const Register: React.FC = () => {
           <div className="bg-primary p-3 rounded-2xl mb-4 shadow-lg shadow-primary/30">
             <span className="material-symbols-outlined text-background-dark text-4xl font-bold">person_add</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Account</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Crear Cuenta</h1>
         </div>
 
         <form onSubmit={handleRegister} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
@@ -74,76 +81,78 @@ export const Register: React.FC = () => {
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Username *</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Usuario *</label>
               <input
                 type="text"
                 name="username"
                 required
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="Choose a username"
+                placeholder="Elige un usuario"
                 className="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Full Name</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Nombre Completo</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="John Doe"
+                placeholder="Juan Pérez"
                 className="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Phone</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Teléfono</label>
               <input
                 type="tel"
                 name="phone"
+                maxLength={10}
+                pattern="[0-9]{10}"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="123-456-7890"
+                placeholder="ej. 5549593871"
                 className="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Address</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Dirección</label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder="123 Main St"
+                placeholder="Calle Principal 123"
                 className="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Password *</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Contraseña *</label>
               <input
                 type="password"
                 name="password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Create password"
+                placeholder="Crea una contraseña"
                 className="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Confirm Password *</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Confirmar Contraseña *</label>
               <input
                 type="password"
                 name="confirmPassword"
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Repeat password"
+                placeholder="Repite la contraseña"
                 className="w-full bg-slate-100 border border-slate-200 rounded-xl py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -151,21 +160,21 @@ export const Register: React.FC = () => {
 
           <button
             type="submit"
-            disabled={!formData.username || !formData.password || loading}
+            disabled={!formData.username || !formData.password || loading || (formData.phone.length > 0 && formData.phone.length !== 10)}
             className="w-full bg-primary hover:bg-primary/90 text-background-dark py-3.5 mt-2 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="block w-5 h-5 border-2 border-background-dark border-t-transparent rounded-full animate-spin" />
             ) : (
-              'Register'
+              'Registrarse'
             )}
           </button>
         </form>
 
         <p className="text-center text-slate-500 text-sm mt-6">
-          Already have an account?{' '}
+          ¿Ya tienes una cuenta?{' '}
           <Link to="/login" className="text-primary hover:underline font-semibold">
-            Sign in
+            Iniciar sesión
           </Link>
         </p>
       </motion.div>

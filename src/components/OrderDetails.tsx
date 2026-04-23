@@ -83,9 +83,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
       <div className="flex flex-col min-h-screen bg-background-light items-center justify-center p-4">
         <div className="text-center space-y-4">
           <span className="material-symbols-outlined text-6xl text-slate-300">error</span>
-          <h2 className="text-xl font-bold">Order not found</h2>
+          <h2 className="text-xl font-bold">Pedido no encontrado</h2>
           <button onClick={() => navigate('/orders')} className="px-6 py-3 bg-primary text-background-dark font-bold rounded-xl mt-4">
-            Go Back
+            Regresar
           </button>
         </div>
       </div>
@@ -157,8 +157,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
             <div>
-              <h2 className="text-lg font-bold tracking-tight leading-tight">Order #{order.id}</h2>
-              <p className="text-xs text-slate-500">{order.date}</p>
+              <h2 className="text-lg font-bold tracking-tight leading-tight">Pedido #{order.id}</h2>
+              <p className="text-xs text-slate-500">
+                {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
+              </p>
             </div>
           </div>
           <button
@@ -193,7 +195,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
               <div className="flex-1">
                 <p className="text-xs font-semibold mb-0.5">Repartidor asignado</p>
                 <p className="text-sm font-bold text-slate-800 leading-tight">{order.repartidor.name}</p>
-                <p className="text-xs font-medium">{order.repartidor.phone}</p>
+                <a href={`tel:${order.repartidor.phone}`} className="text-xs font-medium hover:underline text-blue-500 block">{order.repartidor.phone}</a>
               </div>
             </div>
           )}
@@ -226,7 +228,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
               <div>
                 <p className="text-xs text-slate-500 mb-0.5">Destinatario</p>
                 <p className="text-sm font-bold text-slate-900">{order.customerName}</p>
-                <p className="text-xs text-slate-600 mt-0.5">{order.customerPhone}</p>
+                <a href={`tel:${order.customerPhone}`} className="text-xs text-slate-600 mt-0.5 hover:underline text-blue-500 block">{order.customerPhone}</a>
               </div>
             </div>
             <div className="border-t border-slate-100 pt-4 flex items-start gap-3">

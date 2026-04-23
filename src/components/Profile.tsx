@@ -29,7 +29,7 @@ export const Profile: React.FC = () => {
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const isComplete = name.trim().length > 0 && phone.trim().length > 0 && isAddressSelected;
+  const isComplete = name.trim().length > 0 && phone.trim().length === 10 && isAddressSelected;
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto">
@@ -38,15 +38,15 @@ export const Profile: React.FC = () => {
         <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-3">
           <span className="material-symbols-outlined text-4xl text-primary">person</span>
         </div>
-        <h2 className="text-xl font-bold">My Profile</h2>
-        <p className="text-sm text-slate-400">Fill in your details to start ordering</p>
+        <h2 className="text-xl font-bold">Mi Perfil</h2>
+        <p className="text-sm text-slate-400">Llena tus datos para empezar a pedir</p>
       </div>
 
       {/* Form */}
       <div className="flex flex-col gap-5">
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Full Name
+            Nombre Completo
           </label>
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
@@ -54,7 +54,7 @@ export const Profile: React.FC = () => {
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="ej. Juan Pérez"
               className="w-full bg-slate-100 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
             />
           </div>
@@ -62,15 +62,20 @@ export const Profile: React.FC = () => {
 
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Phone Number
+            Teléfono
           </label>
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">phone</span>
             <input
-              type="text"
+              type="tel"
+              maxLength={10}
+              pattern="[0-9]{10}"
               value={phone}
-              onChange={e => setPhone(e.target.value)}
-              placeholder="1234567890"
+              onChange={e => {
+                const val = e.target.value.replace(/\D/g, '');
+                if (val.length <= 10) setPhone(val);
+              }}
+              placeholder="ej. 5549593871"
               className="w-full bg-slate-100 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
             />
           </div>
@@ -78,7 +83,7 @@ export const Profile: React.FC = () => {
 
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Delivery Address
+            Dirección de Entrega
           </label>
           <AddressInput
             value={address}
@@ -87,7 +92,7 @@ export const Profile: React.FC = () => {
               setIsAddressSelected(false);
             }}
             onSelect={() => setIsAddressSelected(true)}
-            placeholder="e.g. 123 Main St, City, State"
+            placeholder="ej. Calle Principal 123"
             bgClass="bg-slate-100"
           />
         </div>
@@ -102,7 +107,7 @@ export const Profile: React.FC = () => {
               : 'bg-slate-100 text-slate-400 cursor-not-allowed'
           }`}
         >
-          {saved ? '✓ Saved!' : 'Save Profile'}
+          {saved ? '✓ ¡Guardado!' : 'Guardar Perfil'}
         </motion.button>
       </div>
 
@@ -112,7 +117,7 @@ export const Profile: React.FC = () => {
           <span className="material-symbols-outlined text-green-500 text-xl">check_circle</span>
           <div>
             <p className="text-xs font-bold text-green-700">{profile.name}</p>
-            <p className="text-[10px] text-green-600 font-medium">{profile.phone}</p>
+            <a href={`tel:${profile.phone}`} className="text-[10px] text-green-600 font-medium hover:underline hover:text-blue-500">{profile.phone}</a>
             <p className="text-xs text-green-600">{profile.address}</p>
           </div>
         </div>
@@ -127,7 +132,7 @@ export const Profile: React.FC = () => {
         className="mt-8 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 text-red-400 font-bold text-sm hover:bg-red-500/20 transition-colors"
       >
         <span className="material-symbols-outlined text-lg">logout</span>
-        Sign Out
+        Cerrar Sesión
       </button>
     </div>
   );

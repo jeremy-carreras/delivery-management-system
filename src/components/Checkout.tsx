@@ -17,7 +17,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
   const total = subtotal + deliveryFee;
 
   const addressParts = profile.address?.split(',') || [];
-  const shortAddress = addressParts[0] || 'Unknown';
+  const shortAddress = addressParts[0] || 'Desconocido';
   const restAddress = addressParts.slice(1).join(',').trim() || '';
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -54,19 +54,19 @@ export const Checkout: React.FC<CheckoutProps> = () => {
         <button onClick={() => navigate('/cart')} className="p-2 rounded-full bg-white shadow-sm">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h2 className="text-xl font-bold">Checkout</h2>
+        <h2 className="text-xl font-bold">Pagar</h2>
       </header>
 
       <main className="flex-1 p-4 space-y-6 overflow-y-auto">
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-primary">
             <span className="material-symbols-outlined">local_shipping</span>
-            <h3 className="font-bold">Delivery Details</h3>
+            <h3 className="font-bold">Detalles de Entrega</h3>
           </div>
           
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Recipient Name</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Nombre de quien recibe</label>
               <div className="relative">
                 <input type="text" value={profile.name || ''} readOnly className="w-full rounded-xl border-none outline-none bg-slate-100 shadow-sm py-3 px-4 text-slate-900" />
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary">check_circle</span>
@@ -74,12 +74,12 @@ export const Checkout: React.FC<CheckoutProps> = () => {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block">Delivery Address</label>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Dirección de Entrega</label>
               <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="material-symbols-outlined text-slate-400">location_on</span>
                   <p className="text-sm font-medium truncate" title={profile.address}>
-                    {profile.address || 'Address not set'}
+                    {profile.address || 'Dirección no configurada'}
                   </p>
                 </div>
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex items-center gap-3 overflow-hidden">
@@ -90,7 +90,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
                   </div>
                 </div>
                 <p className="text-[10px] text-primary flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">info</span> Precise location found
+                  <span className="material-symbols-outlined text-xs">check_circle</span> Ubicación precisa encontrada
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-primary">
             <span className="material-symbols-outlined">receipt_long</span>
-            <h3 className="font-bold">Order Summary</h3>
+            <h3 className="font-bold">Resumen del Pedido</h3>
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-sm space-y-4">
@@ -109,7 +109,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
                 <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVlMSI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZjFmNWY5Ii8+PHBhdGggZD0iTTIxIDE5VjVjMC0xLjEtLjktMi0yLTJINWMtMS4xIDAtMiAuOS0yIDJ2MTRjMCAxLjEuOSAyIDIgMmgxNGMxLjEgMCAyLS45IDItMnpNOC41IDEzLjVsMi41IDMuMDFMMTQuNSAxMmw0LjUgNkg1bDMuNS00LjV6Ii8+PC9zdmc+'; }} />
                 <div className="flex-1">
                   <h4 className="text-sm font-bold">{item.name}</h4>
-                  <p className="text-xs text-slate-400">x{item.quantity} • Standard</p>
+                  <p className="text-xs text-slate-400">x{item.quantity} • Estándar</p>
                 </div>
                 <p className="text-sm font-bold">${(item.price * item.quantity).toFixed(2)}</p>
               </div>
@@ -122,7 +122,7 @@ export const Checkout: React.FC<CheckoutProps> = () => {
               </div>
               {deliveryFee > 0 && (
                 <div className="flex justify-between text-xs text-slate-500">
-                  <span>Delivery Fee</span>
+                  <span>Costo de Envío</span>
                   <span>${deliveryFee.toFixed(2)}</span>
                 </div>
               )}
@@ -193,12 +193,12 @@ export const Checkout: React.FC<CheckoutProps> = () => {
             <span className="block w-6 h-6 border-2 border-background-dark border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
-              Confirm Order • ${total.toFixed(2)} <span className="material-symbols-outlined">arrow_forward</span>
+              Confirmar Pedido • ${total.toFixed(2)} <span className="material-symbols-outlined">arrow_forward</span>
             </>
           )}
         </Button>
         <p className="text-[10px] text-slate-400 text-center uppercase tracking-widest">
-          By placing your order you agree to our terms of service
+          Al hacer tu pedido aceptas nuestros términos de servicio
         </p>
       </footer>
     </div>

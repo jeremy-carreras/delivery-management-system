@@ -14,7 +14,7 @@ export const Home: React.FC<HomeProps> = () => {
   const navigate = useNavigate();
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const [activeCategory, setActiveCategory] = React.useState('All');
+  const [activeCategory, setActiveCategory] = React.useState('Todos');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showProfileModal, setShowProfileModal] = React.useState(false);
   const profile = useSelector((state: RootState) => state.profile);
@@ -32,11 +32,11 @@ export const Home: React.FC<HomeProps> = () => {
   const [selectedBreadType, setSelectedBreadType] = React.useState<string | null>(null);
   const { products, bakeryFlavors, breadTypes, categories: menuCategories } = useSelector((state: RootState) => state.menu);
 
-  const categoryNames = ['All', ...menuCategories.map(c => c.name)];
+  const categoryNames = ['Todos', ...menuCategories.map(c => c.name)];
 
   const filteredProducts = products.filter(p => {
     if (p.isAvailable === false) return false;
-    const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+    const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
@@ -211,7 +211,7 @@ export const Home: React.FC<HomeProps> = () => {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
             >
-              <h2 className="text-xl font-bold leading-tight">Customize your {selectedBakeryProduct.name.toLowerCase()}</h2>
+              <h2 className="text-xl font-bold leading-tight">Personaliza tu {selectedBakeryProduct.name.toLowerCase()}</h2>
               
               <div>
                 <p className="text-sm font-bold text-slate-700 mt-2">1. Elige la cerveza</p>
@@ -301,7 +301,7 @@ export const Home: React.FC<HomeProps> = () => {
         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
         <input
           className="w-full bg-white border-none rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary text-sm shadow-sm"
-          placeholder="Search for food, groceries..."
+          placeholder="Busca comida, abarrotes..."
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

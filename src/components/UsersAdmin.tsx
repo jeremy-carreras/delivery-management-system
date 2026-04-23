@@ -107,6 +107,7 @@ export const UsersAdmin: React.FC = () => {
     setFormError(null);
     if (!form.username.trim()) { setFormError('El username es requerido.'); return; }
     if (!editingId && !form.password.trim()) { setFormError('El password es requerido para nuevos usuarios.'); return; }
+    if (form.phone && form.phone.trim().length !== 10) { setFormError('El teléfono debe tener exactamente 10 dígitos.'); return; }
 
     setIsSaving(true);
     try {
@@ -273,9 +274,14 @@ export const UsersAdmin: React.FC = () => {
                     <label className="text-xs font-semibold text-slate-500 mb-1 block">Teléfono</label>
                     <input
                       type="tel"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       value={form.phone}
-                      onChange={e => setForm({ ...form, phone: e.target.value })}
-                      placeholder="ej. 555-1234"
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        if (val.length <= 10) setForm({ ...form, phone: val });
+                      }}
+                      placeholder="ej. 5549593871"
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
@@ -394,7 +400,7 @@ export const UsersAdmin: React.FC = () => {
                         <p className="text-xs text-slate-500 truncate">{user.name}</p>
                       )}
                       {user.phone && (
-                        <p className="text-xs text-slate-400">{user.phone}</p>
+                        <a href={`tel:${user.phone}`} className="text-xs text-slate-400 hover:underline text-blue-500">{user.phone}</a>
                       )}
                     </div>
 
