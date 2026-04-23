@@ -8,7 +8,7 @@ import { StatusTracker } from './StatusTracker';
 
 interface OrderDetailsProps {
   orderId: string;
-  userRole: UserRole;
+  userRole?: string | null;
 }
 
 type OrderStatus = 'Pending' | 'Accepted' | 'Preparando' | 'En reparto' | 'Entregado' | 'Cancelled';
@@ -328,8 +328,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
             {nextStatus && (
               <button
                 onClick={() => {
-                  // If preparador is about to send to reparto and order has notes, warn first
-                  if (userRole === 'preparador' && nextStatus === 'En reparto' && order?.notes) {
+                  // If staff is about to send to reparto and order has notes, warn first
+                  if (nextStatus === 'En reparto' && order?.notes) {
                     setShowNotesWarning(true);
                   } else {
                     setPendingStatus(nextStatus);

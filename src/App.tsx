@@ -22,7 +22,7 @@ import { Register } from './components/Register';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { motion, AnimatePresence } from 'motion/react';
 
-const OrderDetailsWrapper: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
+const OrderDetailsWrapper: React.FC<{ userRole?: string | null }> = ({ userRole }) => {
   const { id } = useParams<{ id: string }>();
   return <OrderDetails orderId={id!} userRole={userRole} />;
 };
@@ -137,7 +137,7 @@ const AppContent: React.FC = () => {
               <Route path="/orders" element={<Orders />} />
               <Route
                 path="/orders/:id"
-                element={<OrderDetailsWrapper userRole={userRole ?? 'preparador'} />}
+                element={<OrderDetailsWrapper userRole={userRole} />}
               />
               <Route path="/menu" element={isAdmin ? <MenuAdmin /> : <Navigate to="/" />} />
               <Route path="/admin/users" element={isAdmin ? <UsersAdmin /> : <Navigate to="/" />} />
