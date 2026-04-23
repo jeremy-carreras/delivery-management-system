@@ -21,6 +21,7 @@ import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { motion, AnimatePresence } from 'motion/react';
+import logoImg from './assets/img/boropapas-icon.png';
 
 const OrderDetailsWrapper: React.FC<{ userRole?: string | null }> = ({ userRole }) => {
   const { id } = useParams<{ id: string }>();
@@ -103,9 +104,7 @@ const AppContent: React.FC = () => {
         <header className="sticky top-0 z-50 bg-background-light/80 backdrop-blur-md border-b border-primary/10 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="bg-primary pt-1 pb-0 px-1 rounded-lg">
-                <span className="material-symbols-outlined text-background-dark text-2xl font-bold">bolt</span>
-              </div>
+              <img src={logoImg} alt="Logo" className="w-12 h-12 object-contain shrink-0" />
               <h1 className="text-xl font-bold tracking-tight">Pide Borolas</h1>
             </div>
             <div className="flex items-center gap-4">
@@ -113,7 +112,7 @@ const AppContent: React.FC = () => {
                 onClick={() => navigate('/orders')}
                 className="text-sm font-semibold text-primary hover:opacity-80 transition-opacity"
               >
-                Orders
+                Pedidos
               </button>
             </div>
           </div>
@@ -130,8 +129,8 @@ const AppContent: React.FC = () => {
             transition={{ duration: 0.2 }}
           >
             <Routes location={location}>
-              {/* Workers (admin/repartidor/preparador) are redirected away from non-orders pages */}
-              <Route path="/" element={(isStaffOnly || isAdmin) ? <Navigate to="/orders" /> : <Home />} />
+              {/* Workers (repartidor/preparador) are redirected away from non-orders pages */}
+              <Route path="/" element={isStaffOnly ? <Navigate to="/orders" /> : <Home />} />
               <Route path="/cart" element={isStaffOnly ? <Navigate to="/orders" /> : <Cart />} />
               <Route path="/checkout" element={isStaffOnly ? <Navigate to="/orders" /> : <Checkout />} />
               <Route path="/orders" element={<Orders />} />
@@ -145,7 +144,7 @@ const AppContent: React.FC = () => {
               <Route path="/workerProfile" element={(isStaffOnly || isAdmin) ? <WorkerProfile /> : <Navigate to="/login" />} />
               <Route path="/ordersHistory" element={isStaffOnly ? <Navigate to="/orders" /> : <OrdersHistory />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              {/*<Route path="/register" element={<Register />} />*/}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </motion.div>
@@ -155,14 +154,14 @@ const AppContent: React.FC = () => {
       {showNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-primary/10 px-4 py-2 z-50">
           <div className="max-w-7xl mx-auto flex justify-around items-center px-0 md:px-12 lg:px-20">
-            {/* Home — hidden for staff and admin */}
-            {(!isStaffOnly && !isAdmin) && (
+            {/* Inicio — hidden for staff only, but visible to Admin so they can access all routes */}
+            {!isStaffOnly && (
               <button
                 onClick={() => navigate('/')}
                 className={`flex flex-col items-center gap-1 p-2 ${isHome ? 'text-primary' : 'text-slate-400'}`}
               >
                 <span className={`material-symbols-outlined ${isHome ? 'fill-[1]' : ''}`}>home</span>
-                <span className="text-[10px] font-bold">Home</span>
+                <span className="text-[10px] font-bold">Inicio</span>
               </button>
             )}
 
@@ -196,7 +195,7 @@ const AppContent: React.FC = () => {
 
             {/* Profile — visible to everyone, routes depend on role */}
             <button
-              onClick={() => navigate(userRole ? '/workerProfile' : '/profile')}
+              onClick={() => navigate((isStaffOnly || isAdmin) ? '/workerProfile' : '/profile')}
               className={`flex flex-col items-center gap-1 p-2 ${(isProfile || isWorkerProfile) ? 'text-primary' : 'text-slate-400'}`}
             >
               <span className={`material-symbols-outlined ${(isProfile || isWorkerProfile) ? 'fill-[1]' : ''}`}>person</span>

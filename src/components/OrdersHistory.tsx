@@ -156,7 +156,7 @@ export const OrdersHistory: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <span className="text-[11px] font-bold text-slate-500 block">
-                        {new Date(order.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {new Date(order.created_at).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                       </span>
                       <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border inline-block mt-1 
                         ${order.status === 'Cancelled' ? 'bg-red-50 text-red-600 border-red-200' : 

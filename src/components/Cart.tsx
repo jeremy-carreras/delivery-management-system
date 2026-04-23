@@ -22,15 +22,15 @@ export const Cart: React.FC<CartProps> = () => {
         <button onClick={() => navigate('/')} className="p-2 rounded-full bg-slate-100 shadow-sm">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        <h2 className="text-xl font-bold">Your Cart</h2>
-        <button className="text-red-500 font-semibold text-sm">Clear</button>
+        <h2 className="text-xl font-bold">Tu Carrito</h2>
+        <button className="text-red-500 font-semibold text-sm">Vaciar</button>
       </header>
 
       <main className="flex-1 p-4 space-y-4 overflow-y-auto">
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-slate-400">
             <span className="material-symbols-outlined text-6xl mb-2">shopping_cart</span>
-            <p>Your cart is empty</p>
+            <p>Tu carrito está vacío</p>
           </div>
         ) : (
           cartItems.map(item => (
@@ -93,7 +93,7 @@ export const Cart: React.FC<CartProps> = () => {
             </div>
             {deliveryFee > 0 && (
               <div className="flex justify-between text-sm text-slate-500">
-                <span>Delivery Fee</span>
+                <span>Costo de Envío</span>
                 <span className="font-bold text-slate-900">${deliveryFee.toFixed(2)}</span>
               </div>
             )}
@@ -106,7 +106,7 @@ export const Cart: React.FC<CartProps> = () => {
             onClick={() => navigate('/checkout')}
             className="w-full bg-primary hover:bg-primary/90 text-background-dark py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 border-none"
           >
-            Proceed to Checkout <span className="material-symbols-outlined">arrow_forward</span>
+            Proceder al Pago <span className="material-symbols-outlined">arrow_forward</span>
           </Button>
         </footer>
       )}

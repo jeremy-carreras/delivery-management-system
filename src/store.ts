@@ -153,6 +153,11 @@ const cartSlice = createSlice({
       state.items = [];
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase('auth/logout', (state) => {
+      state.items = [];
+    });
+  },
 });
 
 export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
@@ -207,6 +212,9 @@ const ordersSlice = createSlice({
       })
       .addCase(createOrderEntry.fulfilled, (state, action) => {
         state.history.unshift(action.payload);
+      })
+      .addCase('auth/logout', (state) => {
+        state.history = [];
       });
   }
 });
@@ -233,6 +241,13 @@ const profileSlice = createSlice({
       state.phone = action.payload.phone;
       state.address = action.payload.address;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase('auth/logout', (state) => {
+      state.name = '';
+      state.phone = '';
+      state.address = '';
+    });
   },
 });
 

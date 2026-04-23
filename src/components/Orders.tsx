@@ -40,7 +40,7 @@ export const Orders: React.FC<OrdersProps> = () => {
   const formatDate = (iso: string) => {
     if (!iso) return '—';
     const d = new Date(iso);
-    return d.toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true });
   };
   const isPhoneSet = profile.phone.trim() !== '';
   const isProfileComplete = isPhoneSet && profile.name.trim() !== '' && profile.address.trim() !== '';
@@ -114,7 +114,7 @@ export const Orders: React.FC<OrdersProps> = () => {
       <header className="sticky top-0 z-10 bg-background-light/80 backdrop-blur-md border-b border-primary/10">
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold tracking-tight">Order History</h2>
+            <h2 className="text-xl font-bold tracking-tight">Historial de Pedidos</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -236,7 +236,7 @@ export const Orders: React.FC<OrdersProps> = () => {
 
       <main className="flex-1 p-4 space-y-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold">Recent Activity</h3>
+          <h3 className="text-lg font-bold">Actividad Reciente</h3>
           <button
             onClick={() => setSortAsc(prev => !prev)}
             className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-full shadow-sm hover:bg-slate-50 transition-colors"
@@ -257,8 +257,8 @@ export const Orders: React.FC<OrdersProps> = () => {
             <div className="size-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
               <span className="material-symbols-outlined text-4xl text-slate-300">receipt_long</span>
             </div>
-            <h3 className="font-bold text-lg">No orders yet</h3>
-            <p className="text-slate-500 text-sm mt-1">When you place an order, it will appear here.</p>
+            <h3 className="font-bold text-lg">Aún no hay pedidos</h3>
+            <p className="text-slate-500 text-sm mt-1">Cuando hagas un pedido, aparecerá aquí.</p>
           </div>
         ) : (
           filteredHistory.map(order => {
@@ -297,7 +297,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                         <div>
                           <p className="text-xs font-bold text-primary uppercase tracking-wider truncate">#{order.id}</p>
                           <p className="text-[11px] text-slate-400 mt-0.5">
-                            {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                            {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
                           </p>
                         </div>
                         <span className="text-sm font-bold text-slate-900 ml-2 shrink-0">${order.total.toFixed(2)}</span>
@@ -320,7 +320,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                       {!isStaff && (
                         <div className="flex items-center gap-1 mt-2">
                           <span className="material-symbols-outlined text-slate-400 text-[14px]">phone</span>
-                          <p className="text-xs text-slate-500 font-medium">{order.customerPhone || '—'}</p>
+                          <a href={order.customerPhone ? `tel:${order.customerPhone}` : undefined} className={`text-xs text-slate-500 font-medium ${order.customerPhone ? 'hover:underline text-blue-500' : ''}`}>{order.customerPhone || '—'}</a>
                         </div>
                       )}
                       {!isStaff && (
@@ -364,7 +364,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                           <div className="bg-slate-50 rounded-lg p-2.5 space-y-1.5 border border-slate-100 mb-2">
                             <div className="flex items-center gap-2">
                               <span className="material-symbols-outlined text-slate-400 text-xs">phone</span>
-                              <span className="text-xs font-bold text-slate-700">{order.customerPhone || '—'}</span>
+                              <a href={order.customerPhone ? `tel:${order.customerPhone}` : undefined} className={`text-xs font-bold text-slate-700 ${order.customerPhone ? 'hover:underline text-blue-500' : ''}`}>{order.customerPhone || '—'}</a>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="material-symbols-outlined text-slate-400 text-xs mt-0.5">location_on</span>
@@ -415,7 +415,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                       <div className="flex flex-col min-w-[120px]">
                         <p className="text-[11px] font-bold text-primary uppercase tracking-wider whitespace-nowrap">#{order.id}</p>
                         <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">
-                          {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                          {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
                         </p>
                       </div>
                       <div className="min-w-0">
@@ -471,7 +471,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                     <div className="w-36 shrink-0">
                       <p className="text-[11px] font-bold text-primary uppercase tracking-wider">#{order.id}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5 truncate">
-                        {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                        {order.date ? new Date(order.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
                       </p>
                     </div>
 
@@ -500,7 +500,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                     </div>
 
                     {/* Total + Status */}
-                    <div className="w-24 shrink-0 flex flex-col items-end gap-1">
+                    <div className="w-30 shrink-0 flex flex-col items-end gap-1">
                       <p className="text-sm font-bold text-slate-900">${order.total.toFixed(2)}</p>
                       <span className={`text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
                     </div>
@@ -526,7 +526,7 @@ export const Orders: React.FC<OrdersProps> = () => {
                     <div className="bg-slate-50 rounded-lg p-2.5 space-y-1.5 border border-slate-100 mt-2 mb-2">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-slate-400 text-xs">phone</span>
-                        <span className="text-xs font-bold text-slate-700">{order.customerPhone || '—'}</span>
+                        <a href={order.customerPhone ? `tel:${order.customerPhone}` : undefined} className={`text-xs font-bold text-slate-700 ${order.customerPhone ? 'hover:underline text-blue-500' : ''}`}>{order.customerPhone || '—'}</a>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-slate-400 text-xs mt-0.5">location_on</span>

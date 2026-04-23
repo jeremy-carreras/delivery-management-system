@@ -52,13 +52,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onS
 
   const handleSaveProfile = () => {
     if (phoneOnly) {
-      if (!draftPhone.trim()) return;
+      if (draftPhone.trim().length !== 10) return;
       dispatch(setProfile({ name: profile.name, phone: draftPhone.trim(), address: profile.address }));
       if (onSuccess) onSuccess();
       if (onClose) onClose();
       return;
     }
-    if (!draftName.trim() || !draftPhone.trim() || !isAddressSelected) return;
+    if (!draftName.trim() || draftPhone.trim().length !== 10 || !isAddressSelected) return;
     dispatch(setProfile({ name: draftName.trim(), phone: draftPhone.trim(), address: draftAddress.trim() }));
     if (onSuccess) onSuccess();
     if (onClose) onClose();
@@ -97,8 +97,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onS
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">phone</span>
                     <input
                       type="tel"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       value={draftPhone}
-                      onChange={(e) => setDraftPhone(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        if (val.length <= 10) setDraftPhone(val);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveProfile();
                       }}
@@ -133,8 +138,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onS
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">phone</span>
                     <input
                       type="tel"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
                       value={draftPhone}
-                      onChange={(e) => setDraftPhone(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        if (val.length <= 10) setDraftPhone(val);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleSaveProfile();
                       }}
@@ -170,7 +180,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onS
               )}
               <button
                 onClick={handleSaveProfile}
-                disabled={phoneOnly ? !draftPhone.trim() : (!draftName.trim() || !draftPhone.trim() || !isAddressSelected)}
+                disabled={phoneOnly ? draftPhone.trim().length !== 10 : (!draftName.trim() || draftPhone.trim().length !== 10 || !isAddressSelected)}
                 className="flex-1 py-3 bg-primary text-background-dark hover:bg-primary/90 rounded-xl font-bold text-sm disabled:opacity-50 transition-colors"
               >
                 Guardar
