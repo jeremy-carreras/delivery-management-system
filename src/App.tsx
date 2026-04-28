@@ -82,13 +82,13 @@ const AppContent: React.FC = () => {
       ? (isOrders || isWorkerProfile)
       : (isHome || isOrders || isProfile || isOrdersHistory || isMenuAdmin);
 
-  if (hasCriticalError) {
+  if (hasCriticalError || menuStatus === 'failed') {
     return (
-      <div className="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
+      <div className="fixed inset-0 z-[9999] bg-background-light flex flex-col items-center justify-center p-6 text-center">
         <span className="material-symbols-outlined text-red-500 text-6xl mb-4">error</span>
-        <h2 className="text-2xl font-black text-white mb-2">Oops, algo salió mal</h2>
-        <p className="text-slate-400 font-medium mb-6">
-          Inténtalo más tarde o contáctanos por WhatsApp al número <span className="text-white font-bold whitespace-nowrap">1234567890</span>
+        <h2 className="text-2xl font-black text-slate-900 mb-2">Oops, algo salió mal</h2>
+        <p className="text-slate-500 font-medium mb-6">
+          Inténtalo más tarde o contáctanos por WhatsApp al número <span className="text-slate-700 font-bold whitespace-nowrap">1234567890</span>
         </p>
       </div>
     );

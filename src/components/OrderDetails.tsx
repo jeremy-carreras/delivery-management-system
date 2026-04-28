@@ -174,6 +174,17 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
       </header>
 
       <main className="flex-1 p-4 space-y-6 overflow-y-auto pb-36">
+        {/* Top Warning for Preparador */}
+        {order.notes && order.notes.trim() !== '' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+            <span className="material-symbols-outlined text-amber-500 text-2xl shrink-0 mt-0.5">warning</span>
+            <div>
+              <h3 className="text-amber-900 font-bold leading-tight mb-1">Este pedido tiene especificaciones</h3>
+              <p className="text-amber-800 text-sm">Por favor, revisa la sección de notas antes de iniciar preparación.</p>
+            </div>
+          </div>
+        )}
+
         {/* Status Card */}
         <section className="bg-white rounded-xl p-4 shadow-sm border border-primary/10">
           <div className="flex items-center gap-3">
@@ -240,7 +251,14 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
             </div>
             
             {/* Map Preview */}
-            <div className="w-full mt-3 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shadow-inner relative pointer-events-none" style={{ height: '200px' }}>
+            <a 
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full mt-3 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shadow-inner relative cursor-pointer hover:opacity-90 transition-opacity" 
+              style={{ height: '200px' }}
+            >
+              <div className="absolute inset-0 z-10"></div>
               <iframe
                 title="Google Maps Preview"
                 style={{ 
@@ -254,7 +272,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ orderId, userRole })
                 loading="lazy"
                 src={`https://maps.google.com/maps?q=${encodeURIComponent(order.deliveryAddress)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
               />
-            </div>
+            </a>
 
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.deliveryAddress)}`}

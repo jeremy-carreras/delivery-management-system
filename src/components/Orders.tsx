@@ -20,7 +20,11 @@ export const Orders: React.FC<OrdersProps> = () => {
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
+  const [showFilter, setShowFilter] = useState(() => sessionStorage.getItem('ordersShowFilter') === 'true');
+
+  React.useEffect(() => {
+    sessionStorage.setItem('ordersShowFilter', String(showFilter));
+  }, [showFilter]);
 
   // Default: last 24h
   const default24hFrom = () => {
@@ -29,8 +33,16 @@ export const Orders: React.FC<OrdersProps> = () => {
   };
   const defaultTo = () => new Date().toISOString().slice(0, 16);
 
-  const [filterFrom, setFilterFrom] = useState(default24hFrom);
-  const [filterTo, setFilterTo] = useState(defaultTo);
+  const [filterFrom, setFilterFrom] = useState(() => sessionStorage.getItem('ordersFilterFrom') || default24hFrom());
+  const [filterTo, setFilterTo] = useState(() => sessionStorage.getItem('ordersFilterTo') || defaultTo());
+
+  React.useEffect(() => {
+    sessionStorage.setItem('ordersFilterFrom', filterFrom);
+  }, [filterFrom]);
+
+  React.useEffect(() => {
+    sessionStorage.setItem('ordersFilterTo', filterTo);
+  }, [filterTo]);
 
   const isFilterDefault = filterFrom === default24hFrom() && filterTo === defaultTo();
 

@@ -1,11 +1,11 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { addToCart, RootState, setProfile } from '../store';
-import { Button } from 'primereact/button';
-import { motion, AnimatePresence } from 'motion/react';
-import { AddressInput } from './AddressInput';
-import { ProfileModal } from './ProfileModal';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, RootState, setProfile } from "../store";
+import { Button } from "primereact/button";
+import { motion, AnimatePresence } from "motion/react";
+import { ProfileModal } from "./ProfileModal";
+import { useNavigate } from "react-router-dom";
+import logoImg from "../assets/img/boropapas-icon.png";
 
 interface HomeProps {}
 
@@ -14,30 +14,47 @@ export const Home: React.FC<HomeProps> = () => {
   const navigate = useNavigate();
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
   const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const [activeCategory, setActiveCategory] = React.useState('Todos');
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [showProfileModal, setShowProfileModal] = React.useState(false);
+  const [activeCategory, setActiveCategory] = React.useState("Todos");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const profile = useSelector((state: RootState) => state.profile);
   const auth = useSelector((state: RootState) => state.auth);
-  const isAdmin = auth.isAuthenticated && auth.currentUser?.role === 'admin';
-  const isPhoneSet = profile.phone.trim() !== '';
-  const isProfileComplete = isPhoneSet && profile.name.trim() !== '' && profile.address.trim() !== '';
+  const isAdmin = auth.isAuthenticated && auth.currentUser?.role === "admin";
+  const isPhoneSet = profile.phone.trim() !== "";
+  const isProfileComplete =
+    isPhoneSet && profile.name.trim() !== "" && profile.address.trim() !== "";
   // Show welcome modal whenever profile is not complete AND user is not admin
-  const [showWelcome, setShowWelcome] = React.useState(!isProfileComplete && !isAdmin);
+  const [showWelcome, setShowWelcome] = React.useState(
+    !isProfileComplete && !isAdmin,
+  );
   const [showProfileForCart, setShowProfileForCart] = React.useState(false);
-  const [pendingAction, setPendingAction] = React.useState<{type: string, payload?: any} | null>(null);
+  const [pendingAction, setPendingAction] = React.useState<{
+    type: string;
+    payload?: any;
+  } | null>(null);
 
-  const [selectedBakeryProduct, setSelectedBakeryProduct] = React.useState<any | null>(null);
+  const [selectedBakeryProduct, setSelectedBakeryProduct] = React.useState<
+    any | null
+  >(null);
   const [selectedFlavors, setSelectedFlavors] = React.useState<string[]>([]);
-  const [selectedBreadType, setSelectedBreadType] = React.useState<string | null>(null);
-  const { products, bakeryFlavors, breadTypes, categories: menuCategories } = useSelector((state: RootState) => state.menu);
+  const [selectedBreadType, setSelectedBreadType] = React.useState<
+    string | null
+  >(null);
+  const {
+    products,
+    bakeryFlavors,
+    breadTypes,
+    categories: menuCategories,
+  } = useSelector((state: RootState) => state.menu);
 
-  const categoryNames = ['Todos', ...menuCategories.map(c => c.name)];
+  const categoryNames = ["Todos", ...menuCategories.map((c) => c.name)];
 
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = products.filter((p) => {
     if (p.isAvailable === false) return false;
-    const matchesCategory = activeCategory === 'Todos' || p.category === activeCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      activeCategory === "Todos" || p.category === activeCategory;
+    const matchesSearch = p.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -49,12 +66,12 @@ export const Home: React.FC<HomeProps> = () => {
 
   const handleAddToCart = (product: any) => {
     if (!profile.name.trim() || !profile.address.trim()) {
-      setPendingAction({ type: 'ADD_TO_CART', payload: product });
+      setPendingAction({ type: "ADD_TO_CART", payload: product });
       setShowProfileForCart(true);
       return;
     }
-    const cat = menuCategories.find(c => c.name === product.category);
-    if (cat && cat.type === 'Custom') {
+    const cat = menuCategories.find((c) => c.name === product.category);
+    if (cat && cat.type === "Custom") {
       setSelectedBakeryProduct(product);
       setSelectedFlavors([]);
       setSelectedBreadType(null);
@@ -66,13 +83,13 @@ export const Home: React.FC<HomeProps> = () => {
 
   const handlePendingAction = () => {
     if (!pendingAction) return;
-    if (pendingAction.type === 'REPEAT_ORDER') {
+    if (pendingAction.type === "REPEAT_ORDER") {
       setShowWelcome(false);
-      navigate('/ordersHistory');
-    } else if (pendingAction.type === 'ADD_TO_CART') {
+      navigate("/ordersHistory");
+    } else if (pendingAction.type === "ADD_TO_CART") {
       const product = pendingAction.payload;
-      const cat = menuCategories.find(c => c.name === product.category);
-      if (cat && cat.type === 'Custom') {
+      const cat = menuCategories.find((c) => c.name === product.category);
+      if (cat && cat.type === "Custom") {
         setSelectedBakeryProduct(product);
         setSelectedFlavors([]);
         setSelectedBreadType(null);
@@ -86,12 +103,12 @@ export const Home: React.FC<HomeProps> = () => {
 
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (showWelcome && e.key === 'Escape') {
+      if (showWelcome && e.key === "Escape") {
         setShowWelcome(false);
       }
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [showWelcome]);
 
   return (
@@ -106,7 +123,9 @@ export const Home: React.FC<HomeProps> = () => {
             transition={{ duration: 0.2 }}
             className="fixed top-4 left-1/2 -translate-x-1/2 z-[300] bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-xl text-xs font-medium flex items-center gap-2 max-w-[90%] whitespace-nowrap overflow-hidden"
           >
-            <span className="material-symbols-outlined text-[16px] text-green-400">check_circle</span>
+            <span className="material-symbols-outlined text-[16px] text-green-400">
+              check_circle
+            </span>
             <span className="truncate">{toastMessage}</span>
           </motion.div>
         )}
@@ -130,57 +149,70 @@ export const Home: React.FC<HomeProps> = () => {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="bg-white rounded-3xl w-full max-w-[320px] p-8 shadow-2xl flex flex-col items-center gap-6"
             >
-              <div className="size-20 bg-primary/20 rounded-full flex items-center justify-center text-primary mb-2 shadow-inner">
-                <span className="material-symbols-outlined text-4xl">storefront</span>
-              </div>
-              
+              <img
+                src={logoImg}
+                alt="Logo"
+                className="w-25 h-25 object-contain shrink-0"
+              />
               <div className="text-center space-y-2">
-                <h2 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">¡Hola!</h2>
-                <p className="text-slate-500 font-medium">¿Qué te gustaría hacer hoy?</p>
+                <h2 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">
+                  ¡Hola!
+                </h2>
+                <p className="text-slate-500 font-medium">
+                  ¿Qué te gustaría hacer hoy?
+                </p>
               </div>
-              
+
               <div className="flex flex-col gap-3 w-full mt-2">
-                <button 
+                <button
                   onClick={() => {
                     setShowWelcome(false);
                   }}
                   className="w-full py-4 bg-primary text-slate-900 rounded-2xl font-bold text-base hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group"
                 >
-                  <span className="material-symbols-outlined group-hover:scale-110 transition-transform">restaurant_menu</span>
+                  <span className="material-symbols-outlined group-hover:scale-110 transition-transform">
+                    restaurant_menu
+                  </span>
                   Ver menú
                 </button>
-                <button 
+                <button
                   onClick={() => {
-                    navigate('/orders');
+                    navigate("/orders");
                   }}
                   className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-200 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
                 >
-                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">receipt_long</span>
+                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">
+                    receipt_long
+                  </span>
                   Ver mis pedidos
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     if (!isProfileComplete) {
-                      setPendingAction({ type: 'REPEAT_ORDER' });
+                      setPendingAction({ type: "REPEAT_ORDER" });
                       setShowProfileForCart(true);
                       return;
                     }
                     setShowWelcome(false);
-                    navigate('/ordersHistory');
+                    navigate("/ordersHistory");
                   }}
                   className="w-full py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-200 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
                 >
-                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">history</span>
+                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">
+                    history
+                  </span>
                   Repetir pedido
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowWelcome(false);
-                    navigate('/profile')
+                    navigate("/profile");
                   }}
                   className="w-full py-4 bg-white text-slate-700 rounded-2xl font-bold text-base hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group border border-slate-200 mt-2"
                 >
-                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">person_add</span>
+                  <span className="material-symbols-outlined text-slate-500 group-hover:scale-110 transition-transform">
+                    person_add
+                  </span>
                   Registrarse
                 </button>
               </div>
@@ -190,9 +222,9 @@ export const Home: React.FC<HomeProps> = () => {
       </AnimatePresence>
 
       {/* Cart profile modal — triggered when adding to cart without full profile */}
-      <ProfileModal 
-        isOpen={showProfileForCart} 
-        onClose={() => setShowProfileForCart(false)} 
+      <ProfileModal
+        isOpen={showProfileForCart}
+        onClose={() => setShowProfileForCart(false)}
         onSuccess={handlePendingAction}
       />
 
@@ -211,26 +243,40 @@ export const Home: React.FC<HomeProps> = () => {
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
             >
-              <h2 className="text-xl font-bold leading-tight">Personaliza tu {selectedBakeryProduct.name.toLowerCase()}</h2>
-              
+              <h2 className="text-xl font-bold leading-tight">
+                Personaliza tu {selectedBakeryProduct.name.toLowerCase()}
+              </h2>
+
               <div>
-                <p className="text-sm font-bold text-slate-700 mt-2">1. Elige la cerveza</p>
+                <p className="text-sm font-bold text-slate-700 mt-2">
+                  1. Elige la cerveza
+                </p>
                 <div className="space-y-2 mt-2">
-                  {breadTypes.map(bType => {
+                  {breadTypes.map((bType) => {
                     const isSelected = selectedBreadType === bType.name;
                     return (
                       <button
                         key={bType.id}
                         onClick={() => setSelectedBreadType(bType.name)}
                         className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors ${
-                          isSelected 
-                            ? 'border-primary bg-primary/10 text-slate-900' 
-                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          isSelected
+                            ? "border-primary bg-primary/10 text-slate-900"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                         }`}
                       >
-                        <span className="font-semibold text-sm">{bType.name}</span>
-                        {isSelected && <span className="material-symbols-outlined text-primary text-xl">radio_button_checked</span>}
-                        {!isSelected && <span className="material-symbols-outlined text-slate-300 text-xl">radio_button_unchecked</span>}
+                        <span className="font-semibold text-sm">
+                          {bType.name}
+                        </span>
+                        {isSelected && (
+                          <span className="material-symbols-outlined text-primary text-xl">
+                            radio_button_checked
+                          </span>
+                        )}
+                        {!isSelected && (
+                          <span className="material-symbols-outlined text-slate-300 text-xl">
+                            radio_button_unchecked
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -238,31 +284,44 @@ export const Home: React.FC<HomeProps> = () => {
               </div>
 
               <div>
-                <p className="text-sm font-bold text-slate-700">2. Sabor de escarchado (Requerido, máx 2)</p>
+                <p className="text-sm font-bold text-slate-700">
+                  2. Sabor de escarchado (Requerido, máx 2)
+                </p>
                 <div className="space-y-2 mt-2">
-                  {bakeryFlavors.map(flavor => {
+                  {bakeryFlavors.map((flavor) => {
                     const isSelected = selectedFlavors.includes(flavor.name);
                     const canSelect = isSelected || selectedFlavors.length < 2;
-                    
+
                     return (
                       <button
                         key={flavor.id}
                         onClick={() => {
                           if (isSelected) {
-                            setSelectedFlavors(prev => prev.filter(f => f !== flavor.name));
+                            setSelectedFlavors((prev) =>
+                              prev.filter((f) => f !== flavor.name),
+                            );
                           } else if (canSelect) {
-                            setSelectedFlavors(prev => [...prev, flavor.name]);
+                            setSelectedFlavors((prev) => [
+                              ...prev,
+                              flavor.name,
+                            ]);
                           }
                         }}
                         disabled={!canSelect && !isSelected}
                         className={`w-full flex items-center justify-between p-3 rounded-xl border ${
-                          isSelected 
-                            ? 'border-primary bg-primary/10 text-slate-900' 
-                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                        } ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed border-slate-100' : 'transition-colors'}`}
+                          isSelected
+                            ? "border-primary bg-primary/10 text-slate-900"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        } ${!canSelect && !isSelected ? "opacity-50 cursor-not-allowed border-slate-100" : "transition-colors"}`}
                       >
-                        <span className="font-semibold text-sm">{flavor.name}</span>
-                        {isSelected && <span className="material-symbols-outlined text-primary text-xl">check_circle</span>}
+                        <span className="font-semibold text-sm">
+                          {flavor.name}
+                        </span>
+                        {isSelected && (
+                          <span className="material-symbols-outlined text-primary text-xl">
+                            check_circle
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -270,7 +329,7 @@ export const Home: React.FC<HomeProps> = () => {
               </div>
 
               <div className="flex gap-2 mt-4">
-                <button 
+                <button
                   onClick={() => setSelectedBakeryProduct(null)}
                   className="flex-1 py-3 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl font-bold text-sm transition-colors"
                 >
@@ -279,12 +338,19 @@ export const Home: React.FC<HomeProps> = () => {
                 <button
                   disabled={!selectedBreadType || selectedFlavors.length === 0}
                   onClick={() => {
-                    dispatch(addToCart({ 
-                      ...selectedBakeryProduct, 
-                      flavors: selectedFlavors.length > 0 ? selectedFlavors : undefined,
-                      breadType: selectedBreadType!
-                    }));
-                    showToast(`${selectedBakeryProduct.name} personalizado añadido`);
+                    dispatch(
+                      addToCart({
+                        ...selectedBakeryProduct,
+                        flavors:
+                          selectedFlavors.length > 0
+                            ? selectedFlavors
+                            : undefined,
+                        breadType: selectedBreadType!,
+                      }),
+                    );
+                    showToast(
+                      `${selectedBakeryProduct.name} personalizado añadido`,
+                    );
                     setSelectedBakeryProduct(null);
                   }}
                   className="flex-1 py-3 bg-primary text-background-dark hover:bg-primary/90 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -298,7 +364,9 @@ export const Home: React.FC<HomeProps> = () => {
       </AnimatePresence>
 
       <div className="relative mb-6">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          search
+        </span>
         <input
           className="w-full bg-white border-none rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary text-sm shadow-sm"
           placeholder="Busca comida, abarrotes..."
@@ -309,14 +377,14 @@ export const Home: React.FC<HomeProps> = () => {
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-        {categoryNames.map(cat => (
+        {categoryNames.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
             className={`shrink-0 px-5 py-2 rounded-full font-semibold text-sm transition-colors ${
               activeCategory === cat
-                ? 'bg-yellow-accent text-slate-900'
-                : 'bg-white text-slate-600 border border-slate-100'
+                ? "bg-yellow-accent text-slate-900"
+                : "bg-white text-slate-600 border border-slate-100"
             }`}
           >
             {cat}
@@ -327,30 +395,42 @@ export const Home: React.FC<HomeProps> = () => {
       {/* <h2 className="text-lg font-bold mb-4">Fresh Picks</h2>*/}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredProducts.map(product => (
-          <div key={product.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 flex flex-col">
+        {filteredProducts.map((product) => (
+          <div
+            key={product.id}
+            className="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 flex flex-col"
+          >
             <div className="relative aspect-square">
               <img
                 className="w-full h-full object-cover"
                 src={product.image}
                 alt={product.name}
                 referrerPolicy="no-referrer"
-                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVlMSI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZjFmNWY5Ii8+PHBhdGggZD0iTTIxIDE5VjVjMC0xLjEtLjktMi0yLTJINWMtMS4xIDAtMiAuOS0yIDJ2MTRjMCAxLjEuOSAyIDIgMmgxNGMxLjEgMCAyLS45IDItMnpNOC41IDEzLjVsMi41IDMuMDFMMTQuNSAxMmw0LjUgNkg1bDMuNS00LjV6Ii8+PC9zdmc+'; }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src =
+                    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2NiZDVlMSI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZjFmNWY5Ii8+PHBhdGggZD0iTTIxIDE5VjVjMC0xLjEtLjktMi0yLTJINWMtMS4xIDAtMiAuOS0yIDJ2MTRjMCAxLjEuOSAyIDIgMmgxNGMxLjEgMCAyLS45IDItMnpNOC41IDEzLjVsMi41IDMuMDFMMTQuNSAxMmw0LjUgNkg1bDMuNS00LjV6Ii8+PC9zdmc+";
+                }}
               />
               {/*<button className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center text-slate-400">
                 <span className="material-symbols-outlined text-lg">favorite</span>
               </button>*/}
             </div>
             <div className="p-3 flex flex-col flex-1">
-              <h3 className="font-bold text-sm leading-tight mb-1">{product.name}</h3>
+              <h3 className="font-bold text-sm leading-tight mb-1">
+                {product.name}
+              </h3>
               <p className="text-xs text-slate-500 mb-3">{product.unit}</p>
               <div className="mt-auto">
-                <p className="text-yellow-accent font-bold mb-2">${product.price.toFixed(2)}</p>
+                <p className="text-yellow-accent font-bold mb-2">
+                  ${product.price.toFixed(2)}
+                </p>
                 <Button
                   onClick={() => handleAddToCart(product)}
                   className="w-full bg-primary/10 hover:bg-primary text-background-dark py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1 border-none shadow-none"
                 >
-                  <span className="material-symbols-outlined text-sm">add</span> Agregar
+                  <span className="material-symbols-outlined text-sm">add</span>{" "}
+                  Agregar
                 </Button>
               </div>
             </div>
